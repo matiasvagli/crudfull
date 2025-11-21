@@ -8,5 +8,33 @@ class {{ model_name }}DB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 {% for field_name, field_type in fields.items() %}
-    {{ field_name }} = Column(String)
 {% endfor %}
+from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String, Float, Boolean
+
+Base = declarative_base()
+
+
+class {{ model_name }}(BaseModel):
+{% for field_name, field_type in fields.items() %}
+    {{ field_name }}: {{ field_type }}
+{% endfor %}
+
+
+class {{ model_name }}DB(Base):
+    __tablename__ = "{{ resource }}"
+
+    id = Column(Integer, primary_key=True, index=True)
+{% for field_name, field_type in fields.items() %}
+    {%- if field_type == 'int' -%}
+    {{ field_name }} = Column(Integer)
+    {%- elif field_type == 'float' -%}
+    {{ field_name }} = Column(Float)
+    {%- elif field_type == 'bool' -%}
+    {{ field_name }} = Column(Boolean)
+    {%- else -%}
+    {{ field_name }} = Column(String)
+    {%- endif -%}
+{% endfor %}
+
+```

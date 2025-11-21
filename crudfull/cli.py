@@ -9,13 +9,7 @@ import os
 # ===========================
 def show_logo():
     logo = r"""
-   ____ ____  _   _ ____  _____ _   _ _      
-  / ___/ ___|| | | |  _ \|  ___| | | | |     
- | |   \___ \| | | | |_) | |_  | | | | |     
- | |___ ___) | |_| |  _ <|  _| | |_| | |___  
-  \____|____/ \___/|_| \_\_|    \___/|_____|
-  
-            🚀  CRUDFULL ENGINE  
+        🚀   CRUD-FULL — 
         Modes: ghost | sql | mongo
 """
     typer.echo(logo)
@@ -72,6 +66,80 @@ def render_template(path: str, context: dict) -> str:
     return template.render(context)
 
 
+# ---------------------------
+# Helpers Docker-compose (.dev) non-invasive
+# ---------------------------
+def ensure_env_file(env_path: str, vars: dict):
+    """Crea o actualiza .env añadiendo variables que falten (no sobrescribe las existentes)."""
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            content = f.read()
+        appended = False
+        with open(env_path, "a") as f:
+            for k, v in vars.items():
+                if k not in content:
+                    f.write(f"{k}={v}\n")
+                    appended = True
+        if appended:
+            typer.echo(f"🔧 Actualizadas variables en {env_path}")
+        else:
+            typer.echo(f"ℹ️  {env_path} ya contenía las variables necesarias")
+    else:
+        with open(env_path, "w") as f:
+            for k, v in vars.items():
+                f.write(f"{k}={v}\n")
+        typer.echo(f"🆕 {env_path} creado")
+
+
+def ensure_compose_has_service(compose_path: str, service_key: str, service_block: str, volumes: list[str]):
+    """Añade un bloque de servicio al compose (no invasivo). Si el servicio existe, no hace nada.
+    Si no existe compose, lo crea con versión 3.8 y el servicio.
+    """
+    if os.path.exists(compose_path):
+        with open(compose_path, "r") as f:
+            content = f.read()
+
+        if service_key in content:
+            typer.echo(f"ℹ️  El servicio '{service_key}' ya existe en {compose_path}")
+            # asegurar volúmenes
+            for v in volumes:
+                if v not in content:
+                    # si existe 'volumes:' lo añadimos al final
+                    if "\nvolumes:" in content:
+                        content = content + f"\n{v}:\n"
+                    else:
+                        content = content + f"\nvolumes:\n  {v}:\n"
+            with open(compose_path, "w") as f:
+                f.write(content)
+            return
+
+        # Servicio no está presente: lo agregamos justo antes del bloque 'volumes:' si existe, sino al final
+        if "\nvolumes:" in content:
+            parts = content.split("\nvolumes:")
+            new_content = parts[0].rstrip() + "\n\n" + service_block + "\n\nvolumes:" + parts[1]
+        else:
+            new_content = content.rstrip() + "\n\n" + service_block + "\n\nvolumes:\n"
+
+        # asegurar volúmenes listados
+        for v in volumes:
+            if v not in new_content:
+                new_content = new_content + f"  {v}:\n"
+
+        with open(compose_path, "w") as f:
+            f.write(new_content)
+
+        typer.echo(f"✅ Servicio '{service_key}' añadido a {compose_path}")
+    else:
+        # crear nuevo compose con el servicio
+        base = "version: '3.8'\nservices:\n"
+        content = base + service_block + "\nvolumes:\n"
+        for v in volumes:
+            content += f"  {v}:\n"
+        with open(compose_path, "w") as f:
+            f.write(content)
+        typer.echo(f"🆕 {compose_path} creado con el servicio '{service_key}'")
+
+
 # ===========================
 # VERSION
 # ===========================
@@ -88,8 +156,41 @@ def generate_resource(
     name: str = typer.Argument(..., help="Nombre del modelo"),
     fields: list[str] = typer.Argument(..., help="Campos en formato nombre:tipo"),
     db: str = typer.Option("ghost", "--db", help="ghost | sql | mongo"),
+    docker: bool = typer.Option(False, "--docker", help="Crear docker-compose.yml y .env (solo para --db mongo)"),
+    force: bool = typer.Option(False, "--force", "-f", help="Forzar sobrescritura si el recurso ya existe"),
 ):
     typer.echo(f"🔥 Generando RESOURCE: {name} con motor: {db}")
+
+    # ---- Comprobación no invasiva de dependencias ----
+    missing = []
+    if db == "mongo":
+        try:
+            import beanie  # noqa: F401
+            import motor  # noqa: F401
+        except Exception:
+            missing = ["beanie", "motor"]
+    elif db == "sql":
+        try:
+            import sqlalchemy  # noqa: F401
+            import asyncpg  # noqa: F401
+        except Exception:
+            missing = ["sqlalchemy", "asyncpg"]
+
+    if missing:
+        typer.secho("\n⚠️  Dependencias faltantes detectadas:", fg="yellow")
+        typer.secho(f"  Para --db {db} faltan: {', '.join(missing)}\n", fg="yellow")
+        typer.echo("Opciones para instalarlas:")
+        # sugerencias pip y poetry
+        if db == "mongo":
+            typer.echo("  pip:\n    pip install motor beanie")
+            typer.echo("  o (si usas extras del paquete):\n    pip install 'crudfull[mongo]'")
+            typer.echo("  poetry:\n    poetry add motor beanie")
+        elif db == "sql":
+            typer.echo("  pip:\n    pip install sqlalchemy asyncpg")
+            typer.echo("  o (si usas extras del paquete):\n    pip install 'crudfull[sql]'")
+            typer.echo("  poetry:\n    poetry add sqlalchemy asyncpg")
+
+        typer.echo("\nNota: No se instalarán paquetes automáticamente. Instálalos manualmente o activa un entorno adecuado (venv/poetry).\n")
 
     parsed_fields = {}
     for field in fields:
@@ -110,7 +211,39 @@ def generate_resource(
         "fields": parsed_fields,
         "resource": resource,
         "singular": singular,
+        "docker": docker,
     }
+
+    # --------------------------
+    # PROTECCIÓN: evitar sobrescribir recursos existentes
+    # --------------------------
+    conflicts = []
+    models_path = os.path.join(os.getcwd(), "models", f"{model_file}.py")
+    routers_path = os.path.join(os.getcwd(), "routers", f"{model_file}_router.py")
+    services_dir = os.path.join(os.getcwd(), "services")
+
+    if os.path.exists(models_path):
+        conflicts.append(models_path)
+    if os.path.exists(routers_path):
+        conflicts.append(routers_path)
+
+    # comprobar cualquier servicio existente que comience con el prefijo del recurso
+    if os.path.exists(services_dir):
+        for fname in os.listdir(services_dir):
+            if fname.startswith(f"{model_file}_service_"):
+                conflicts.append(os.path.join(services_dir, fname))
+
+    if conflicts and not force:
+        typer.secho("\n❌ Error: Ya existen archivos para este recurso:\n", fg="red")
+        for c in conflicts:
+            typer.echo(f"  - {c}")
+        typer.echo("\nSi quieres sobrescribirlos usa el flag `--force` o elimina manualmente los archivos existentes.")
+        raise typer.Exit(code=1)
+    elif conflicts and force:
+        typer.secho("⚠️  Advertencia: se sobrescribirán los siguientes archivos:\n", fg="yellow")
+        for c in conflicts:
+            typer.echo(f"  - {c}")
+        typer.echo("")
 
     # MODEL
     model_tpl = {
@@ -151,6 +284,65 @@ def generate_resource(
     if db == "mongo":
         example = render_template("mongo/database_mongo_example.jinja2", context)
         write_file("database_examples", "database_mongo_example.py", example)
+
+    # Si se pidió docker, generar/actualizar docker-compose de forma no invasiva
+    if docker:
+        compose_path = os.path.join(os.getcwd(), "docker-compose.dev.yml")
+        env_path = os.path.join(os.getcwd(), ".env")
+
+        if db == "mongo":
+            typer.echo("📦 Asegurando servicio Mongo en docker-compose.dev.yml y variables en .env...")
+            mongo_service = (
+                "  mongo:\n"
+                "    image: mongo:6.0\n"
+                "    container_name: crudfull_mongo\n"
+                "    ports:\n"
+                "      - \"${MONGO_PORT}:27017\"\n"
+                "    environment:\n"
+                "      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}\n"
+                "      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}\n"
+                "      - MONGO_INITDB_DATABASE=${MONGO_DATABASE}\n"
+                "    volumes:\n"
+                "      - mongo_data:/data/db\n"
+            )
+
+            env_vars = {
+                "MONGO_INITDB_ROOT_USERNAME": "crudfull_user",
+                "MONGO_INITDB_ROOT_PASSWORD": "changeme",
+                "MONGO_DATABASE": "mydb",
+                "MONGO_HOST": "mongo",
+                "MONGO_PORT": "27017",
+            }
+
+            ensure_compose_has_service(compose_path, "mongo:", mongo_service, ["mongo_data"])
+            ensure_env_file(env_path, env_vars)
+
+        if db == "sql":
+            typer.echo("📦 Asegurando servicio Postgres en docker-compose.dev.yml y variables en .env...")
+            pg_service = (
+                "  postgres:\n"
+                "    image: postgres:15\n"
+                "    container_name: crudfull_postgres\n"
+                "    ports:\n"
+                "      - \"${POSTGRES_PORT}:5432\"\n"
+                "    environment:\n"
+                "      - POSTGRES_USER=${POSTGRES_USER}\n"
+                "      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n"
+                "      - POSTGRES_DB=${POSTGRES_DB}\n"
+                "    volumes:\n"
+                "      - postgres_data:/var/lib/postgresql/data\n"
+            )
+
+            env_vars = {
+                "POSTGRES_USER": "crudfull_user",
+                "POSTGRES_PASSWORD": "changeme",
+                "POSTGRES_DB": "crudfulldb",
+                "POSTGRES_HOST": "postgres",
+                "POSTGRES_PORT": "5432",
+            }
+
+            ensure_compose_has_service(compose_path, "postgres:", pg_service, ["postgres_data"])
+            ensure_env_file(env_path, env_vars)
 
     
     # --------------------------

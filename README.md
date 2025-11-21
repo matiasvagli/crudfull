@@ -1,15 +1,3 @@
-Metadata-Version: 2.4
-Name: crudfull
-Version: 0.1.0
-Summary: Generador de CRUDs para FastAPI (work in progress)
-Author-email: Matias Vagliviello <vaglimatias@gmail.com>
-Requires-Python: >=3.10
-Description-Content-Type: text/markdown
-Requires-Dist: fastapi>=0.115.0
-Requires-Dist: pydantic>=2.0.0
-Requires-Dist: typer[all]>=0.12.0
-Requires-Dist: Jinja2>=3.1.0
-
 # ⚡️ CRUDFULL — Generador de CRUDs para FastAPI
 
 **CRUDFULL** te permite crear recursos CRUD completos en segundos, soportando tres motores:

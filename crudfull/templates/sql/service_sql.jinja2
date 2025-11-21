@@ -1,0 +1,20 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+from models.{{ model_file }} import {{ model_name }}DB
+
+class {{ model_name }}ServiceSQL:
+	def __init__(self, db: AsyncSession):
+		self.db = db
+
+	async def list(self):
+		result = await self.db.execute(
+			__import__('sqlalchemy').select({{ model_name }}DB)
+		)
+		return result.scalars().all()
+
+	async def create(self, item):
+		obj = {{ model_name }}DB(**item.dict())
+		self.db.add(obj)
+		await self.db.commit()
+		await self.db.refresh(obj)
+		return obj
+

@@ -1,8 +1,21 @@
+
 # Ejemplo de conexión SQLAlchemy Async para FastAPI
 
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/mydb"
+# Construir DATABASE_URL leyendo variables de entorno con valores por defecto.
+# Esto funciona tanto en Docker (si defines POSTGRES_* en .env) como localmente
+# (usa localhost por defecto).
+POSTGRES_USER = os.getenv("POSTGRES_USER", "user")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "password")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+POSTGRES_DB = os.getenv("POSTGRES_DB", "mydb")
+
+DATABASE_URL = (
+    f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+)
 
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
@@ -10,3 +23,4 @@ SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 async def get_db():
     async with SessionLocal() as session:
         yield session
+

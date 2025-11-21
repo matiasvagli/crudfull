@@ -1,12 +1,28 @@
-# Ejemplo de conexión Beanie + Motor
+{# Ejemplo de conexión Beanie + Motor (dual-mode: usa env vars con defaults) #}
+
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
-from models.{{ model_file }}_mongo import {{ model_name }}Document
+from models.{{ model_file }} import {{ model_name }}Document
+
 
 async def init_db():
-    client = AsyncIOMotorClient("mongodb://localhost:27017")
+    # Leer configuración desde variables de entorno (si existen) o usar valores por defecto.
+    mongo_host = os.getenv("MONGO_HOST", "localhost")
+    mongo_port = os.getenv("MONGO_PORT", "27017")
+    mongo_db = os.getenv("MONGO_DATABASE", "mydb")
+    mongo_user = os.getenv("MONGO_INITDB_ROOT_USERNAME", "")
+    mongo_pass = os.getenv("MONGO_INITDB_ROOT_PASSWORD", "")
+
+    if mongo_user and mongo_pass:
+        mongo_uri = f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}"
+    else:
+        mongo_uri = f"mongodb://{mongo_host}:{mongo_port}"
+
+    client = AsyncIOMotorClient(mongo_uri)
     await init_beanie(
-        database=client.mydb,
+        database=getattr(client, mongo_db),
         document_models=[{{ model_name }}Document],
     )
+
