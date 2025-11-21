@@ -1,0 +1,12 @@
+# Ejemplo de conexión SQLAlchemy Async para FastAPI
+
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+
+DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/mydb"
+
+engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+async def get_db():
+    async with SessionLocal() as session:
+        yield session

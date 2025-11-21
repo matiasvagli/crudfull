@@ -1,0 +1,9 @@
+from beanie import Document
+
+class {{ model_name }}Document(Document):
+{% for field_name, field_type in fields.items() %}
+    {{ field_name }}: {{ field_type }}
+{% endfor %}
+
+    class Settings:
+        name = "{{ resource }}"

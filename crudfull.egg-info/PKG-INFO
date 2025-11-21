@@ -1,0 +1,172 @@
+Metadata-Version: 2.4
+Name: crudfull
+Version: 0.1.0
+Summary: Generador de CRUDs para FastAPI (work in progress)
+Author-email: Matias Vagliviello <vaglimatias@gmail.com>
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.115.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: typer[all]>=0.12.0
+Requires-Dist: Jinja2>=3.1.0
+
+# ⚡️ CRUDFULL — Generador de CRUDs para FastAPI
+
+**CRUDFULL** te permite crear recursos CRUD completos en segundos, soportando tres motores:
+
+- 🟢 **ghost**: CRUD sin base de datos (prototipos, demos, tests)
+- 🟦 **sql**: SQLAlchemy Async (PostgreSQL, MySQL, SQLite…)
+- 🟩 **mongo**: MongoDB con Beanie (ODM basado en Pydantic)
+
+## ✨ ¿Qué genera?
+
+- Modelos Pydantic
+- Modelos SQL/Mongo
+- Servicios completos
+- Routers FastAPI
+- Ejemplos de conexión a DB
+- Estructura lista para usar
+
+---
+
+## 🚀 Instalación (modo desarrollo)
+
+```bash
+git clone https://github.com/TU-USUARIO/crudfull.git
+cd crudfull
+pip install -e .
+```
+
+---
+
+## 🧪 Crear un proyecto de prueba
+
+```bash
+mkdir crudfull_test
+cd crudfull_test
+```
+
+---
+
+## ⚙️ Uso del CLI
+
+### 📍 Ver versión
+
+```bash
+crudfull version
+```
+
+---
+
+## 🧱 Generar un recurso completo
+
+```bash
+crudfull generate resource <Nombre> <campos...> --db <motor>
+```
+
+Ejemplo de campos:  
+`name:str age:int active:bool`
+
+Motores disponibles:  
+- `ghost` (default)
+- `sql`
+- `mongo`
+
+---
+
+### 👻 Modo GHOST (sin base de datos)
+
+```bash
+crudfull generate resource User name:str age:int --db ghost
+```
+
+Genera:
+- `models/user.py`
+- `services/user_service_ghost.py`
+- `routers/user_router.py`
+
+Perfecto para prototipos, pruebas y demos rápidas.
+
+---
+
+### 🟦 Modo SQL (SQLAlchemy Async)
+
+```bash
+crudfull generate resource Product title:str price:int --db sql
+```
+
+Genera:
+- `models/product.py` (Pydantic)
+- `models/product_sql.py` (SQLAlchemy)
+- `services/product_service_sql.py`
+- `routers/product_router.py`
+- `database_examples/database_sql_example.py`
+
+Listo para usar en FastAPI:
+
+```python
+from database_examples.database_sql_example import get_db
+```
+
+---
+
+### 🟩 Modo Mongo (Beanie ODM)
+
+```bash
+crudfull generate resource Order amount:int code:str --db mongo
+```
+
+Genera:
+- `models/order.py`
+- `models/order_mongo.py`
+- `services/order_service_mongo.py`
+- `routers/order_router.py`
+- `database_examples/database_mongo_example.py`
+
+Inicializa con:
+
+```python
+from database_examples.database_mongo_example import init_db
+```
+
+---
+
+## 📁 Estructura generada
+
+```
+models/
+services/
+routers/
+database_examples/
+```
+
+Backend modular, limpio y escalable.
+
+---
+
+## 🧙‍♂️ Arquitectura de Templates
+
+```
+crudfull/
+  templates/
+    ghost/
+    sql/
+    mongo/
+```
+
+---
+
+## 🛠️ Roadmap futuro
+
+- Generación de pruebas automáticas (pytest + httpx)
+- Generar proyecto FastAPI completo (`crudfull new project`)
+- Compatibilidad con más ORMs
+- Parámetros para soft deletes, timestamps, UUIDs
+- Publicar en PyPI
+- Documentación con MkDocs
+
+---
+
+## 👨‍💻 Autor
+
+Desarrollado por Matías

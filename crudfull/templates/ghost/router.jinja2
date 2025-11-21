@@ -1,0 +1,26 @@
+from fastapi import APIRouter
+from models.{{ model_file }} import {{ model_name }}
+from services.{{ model_file }}_service_ghost import {{ model_name }}ServiceGhost
+
+router = APIRouter(prefix="/{{ resource }}", tags=["{{ model_name }}"])
+service = {{ model_name }}ServiceGhost()
+
+@router.get("/")
+def list_{{ resource }}():
+    return service.list()
+
+@router.get("/{item_id}")
+def get_{{ singular }}(item_id: int):
+    return service.get(item_id)
+
+@router.post("/")
+def create_{{ singular }}(item: {{ model_name }}):
+    return service.create(item)
+
+@router.patch("/{item_id}")
+def update_{{ singular }}(item_id: int, item: {{ model_name }}):
+    return service.update(item_id, item)
+
+@router.delete("/{item_id}")
+def delete_{{ singular }}(item_id: int):
+    return service.delete(item_id)    

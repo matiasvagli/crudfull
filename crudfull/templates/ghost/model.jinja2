@@ -1,0 +1,6 @@
+from pydantic import BaseModel
+
+class {{ model_name }}(BaseModel):
+{% for field_name, field_type in fields.items() %}
+    {{ field_name }}: {{ field_type }}
+{% endfor %}

@@ -1,0 +1,12 @@
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class {{ model_name }}DB(Base):
+    __tablename__ = "{{ resource }}"
+
+    id = Column(Integer, primary_key=True, index=True)
+{% for field_name, field_type in fields.items() %}
+    {{ field_name }} = Column(String)
+{% endfor %}

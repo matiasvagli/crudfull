@@ -1,0 +1,2 @@
+[console_scripts]
+crudfull = crudfull.cli:app

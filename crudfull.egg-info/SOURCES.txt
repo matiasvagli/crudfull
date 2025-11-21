@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+crudfull/__init__.py
+crudfull/cli.py
+crudfull.egg-info/PKG-INFO
+crudfull.egg-info/SOURCES.txt
+crudfull.egg-info/dependency_links.txt
+crudfull.egg-info/entry_points.txt
+crudfull.egg-info/requires.txt
+crudfull.egg-info/top_level.txt
