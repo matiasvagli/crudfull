@@ -1,23 +1,20 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import declarative_base
-
-Base = declarative_base()
-
-class {{ model_name }}DB(Base):
-    __tablename__ = "{{ resource }}"
-
-    id = Column(Integer, primary_key=True, index=True)
-{% for field_name, field_type in fields.items() %}
-{% endfor %}
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, Float, Boolean
+{% if has_optional %}from typing import Optional{% endif %}
+{% if has_datetime %}from datetime import datetime{% endif %}
+{% if has_uuid %}from uuid import UUID{% endif %}
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 
 class {{ model_name }}(BaseModel):
-{% for field_name, field_type in fields.items() %}
-    {{ field_name }}: {{ field_type }}
+{% for field_name, field_data in fields.items() %}
+    {%- if field_data.optional %}
+    {{ field_name }}: Optional[{{ 'UUID' if field_data.type == 'uuid' else field_data.type }}] = None
+    {%- else %}
+    {{ field_name }}: {{ 'UUID' if field_data.type == 'uuid' else field_data.type }}
+    {%- endif %}
 {% endfor %}
 
 
@@ -25,16 +22,16 @@ class {{ model_name }}DB(Base):
     __tablename__ = "{{ resource }}"
 
     id = Column(Integer, primary_key=True, index=True)
-{% for field_name, field_type in fields.items() %}
-    {%- if field_type == 'int' -%}
-    {{ field_name }} = Column(Integer)
-    {%- elif field_type == 'float' -%}
-    {{ field_name }} = Column(Float)
-    {%- elif field_type == 'bool' -%}
-    {{ field_name }} = Column(Boolean)
-    {%- else -%}
-    {{ field_name }} = Column(String)
-    {%- endif -%}
+{% for field_name, field_data in fields.items() %}
+    {%- if field_data.type == 'int' %}
+    {{ field_name }} = Column(Integer, nullable={{ field_data.optional }})
+    {%- elif field_data.type == 'float' %}
+    {{ field_name }} = Column(Float, nullable={{ field_data.optional }})
+    {%- elif field_data.type == 'bool' %}
+    {{ field_name }} = Column(Boolean, nullable={{ field_data.optional }})
+    {%- elif field_data.type == 'datetime' %}
+    {{ field_name }} = Column(DateTime, nullable={{ field_data.optional }})
+    {%- else %}
+    {{ field_name }} = Column(String, nullable={{ field_data.optional }})
+    {%- endif %}
 {% endfor %}
-
-```

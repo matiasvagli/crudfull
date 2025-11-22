@@ -1,0 +1,7 @@
+import asyncio
+from database_examples.database_sql_example import create_tables
+
+if __name__ == "__main__":
+    print("🚀 Creating tables...")
+    asyncio.run(create_tables())
+    print("✅ Tables created successfully!")

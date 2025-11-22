@@ -1,0 +1,37 @@
+import pytest
+from httpx import AsyncClient, ASGITransport
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
+import os
+import sys
+import asyncio
+
+# Add project root to sys.path so we can import main
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from main import app
+
+# Import your models here. 
+# Since we don't know all models, we assume the user will add them or we import the specific one being tested if we can.
+# But for a generic conftest, we might need to be clever.
+# For now, let's import the specific model this conftest is generated for, or assume a 'models' package.
+from models.{{ model_file }} import {{ model_name }}Document
+
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture(scope="session")
+async def test_db():
+    client = AsyncIOMotorClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
+    db = client.test_db_{{ resource }}
+    await init_beanie(database=db, document_models=[{{ model_name }}Document])
+    yield db
+    await client.drop_database("test_db_{{ resource }}")
+
+@pytest.fixture
+async def client(test_db):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac

@@ -1,0 +1,22 @@
+import pytest
+from httpx import AsyncClient, ASGITransport
+import os
+import sys
+
+# Add project root to sys.path so we can import main
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from main import app
+from routers.{{ model_file }}_router import service
+
+@pytest.fixture
+def reset_ghost_db():
+    """Reset the in-memory list before each test."""
+    service.items = []
+    service.auto_id = 1
+    yield
+
+@pytest.fixture
+async def client(reset_ghost_db):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac

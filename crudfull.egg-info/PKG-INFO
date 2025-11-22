@@ -9,6 +9,12 @@ Requires-Dist: fastapi>=0.115.0
 Requires-Dist: pydantic>=2.0.0
 Requires-Dist: typer[all]>=0.12.0
 Requires-Dist: Jinja2>=3.1.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: inflect>=7.0.0
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Requires-Dist: pytest-asyncio; extra == "test"
+Requires-Dist: httpx; extra == "test"
 
 # ⚡️ CRUDFULL — Generador de CRUDs para FastAPI
 
@@ -106,6 +112,21 @@ Listo para usar en FastAPI:
 
 ```python
 from database_examples.database_sql_example import get_db
+```
+
+**Creación de tablas:**
+Se genera un script automático en `scripts/create_tables.py`. Ejecútalo para inicializar la DB:
+
+```bash
+python scripts/create_tables.py
+```
+
+**Tests automáticos:**
+Se generan tests en `tests/`. Para correrlos:
+
+```bash
+pip install 'crudfull[test]'
+pytest
 ```
 
 ---

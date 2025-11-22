@@ -2,6 +2,7 @@ import typer
 from . import __version__
 from jinja2 import Environment, FileSystemLoader
 import os
+import inflect
 
 
 # ===========================
@@ -193,16 +194,40 @@ def generate_resource(
         typer.echo("\nNota: No se instalarán paquetes automáticamente. Instálalos manualmente o activa un entorno adecuado (venv/poetry).\n")
 
     parsed_fields = {}
+    has_optional = False
+    has_datetime = False
+    has_uuid = False
+
     for field in fields:
         if ":" not in field:
             typer.echo(f"❌ Error en campo '{field}'. Formato válido: nombre:tipo")
             raise typer.Exit(code=1)
+        
         fname, ftype = field.split(":", 1)
-        parsed_fields[fname] = ftype
+        is_optional = False
+        
+        if ftype.endswith("?"):
+            ftype = ftype[:-1]
+            is_optional = True
+            has_optional = True
+        
+        if ftype == "datetime":
+            has_datetime = True
+        if ftype == "uuid":
+            has_uuid = True
+
+        parsed_fields[fname] = {
+            "type": ftype,
+            "optional": is_optional
+        }
 
     model_name = name
     model_file = name.lower()
-    resource = model_file + "s"
+    
+    # Smart pluralization
+    p = inflect.engine()
+    resource = p.plural(model_file)
+    
     singular = model_file
 
     context = {
@@ -212,6 +237,9 @@ def generate_resource(
         "resource": resource,
         "singular": singular,
         "docker": docker,
+        "has_optional": has_optional,
+        "has_datetime": has_datetime,
+        "has_uuid": has_uuid,
     }
 
     # --------------------------
@@ -280,10 +308,42 @@ def generate_resource(
     if db == "sql":
         example = render_template("sql/database_sql_example.jinja2", context)
         write_file("database_examples", "database_sql_example.py", example)
+        
+        # Generate create_tables script
+        script_content = render_template("sql/create_tables.jinja2", context)
+        write_file("scripts", "create_tables.py", script_content)
 
     if db == "mongo":
         example = render_template("mongo/database_mongo_example.jinja2", context)
         write_file("database_examples", "database_mongo_example.py", example)
+
+    # --------------------------
+    # GENERATE TESTS (Unified)
+    # --------------------------
+    conftest_tpl = {
+        "sql": "sql/conftest.jinja2",
+        "mongo": "mongo/conftest.jinja2",
+        "ghost": "ghost/conftest.jinja2"
+    }.get(db)
+
+    test_tpl = {
+        "sql": "sql/test_resource.jinja2",
+        "mongo": "mongo/test_resource.jinja2",
+        "ghost": "ghost/test_resource.jinja2"
+    }.get(db)
+
+    if conftest_tpl and not os.path.exists(os.path.join(os.getcwd(), "tests", "conftest.py")):
+        conftest = render_template(conftest_tpl, context)
+        write_file("tests", "conftest.py", conftest)
+
+    if test_tpl:
+        test_file = render_template(test_tpl, context)
+        write_file("tests", f"test_{model_file}.py", test_file)
+        
+        typer.echo("\n🧪 Tests generados en tests/")
+        typer.echo("   Para ejecutarlos, instala las dependencias de test:")
+        typer.echo("   pip install 'crudfull[test]'")
+        typer.echo("   Luego corre: pytest\n")
 
     # Si se pidió docker, generar/actualizar docker-compose de forma no invasiva
     if docker:
@@ -349,6 +409,19 @@ def generate_resource(
     # AUTO-INTEGRAR EN main.py
     # --------------------------
     integrate_router_into_main(model_file)
+    
+    # --------------------------
+    # Si es SQL, aseguramos que main.py inicialice las tablas en startup
+    # --------------------------
+    if db == "sql":
+        main_path = find_or_create_main()
+
+        with open(main_path, "r") as f:
+            content = f.read()
+
+        # 1) importar create_tables si no existe
+        # (Opcional: ya no forzamos esto, el usuario usa el script)
+        pass
     
 
     typer.echo("🚀 CRUD generado con éxito!")

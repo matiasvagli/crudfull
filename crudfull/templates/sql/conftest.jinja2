@@ -1,0 +1,51 @@
+import asyncio
+import os
+import sys
+
+# Add project root to sys.path so we can import main
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from database_examples.database_sql_example import DATABASE_URL, Base, get_db
+from main import app
+
+# Use the same DB URL but maybe you want a test DB? 
+# For simplicity in this starter kit, we reuse the config but you should override DATABASE_URL in env for tests.
+engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+TestingSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for each test case."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture(scope="module")
+async def init_db():
+    """Initialize the database (create tables) for the test module."""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+@pytest.fixture
+async def db_session(init_db):
+    """Dependency override for the database session."""
+    async with TestingSessionLocal() as session:
+        yield session
+
+@pytest.fixture
+async def client(db_session):
+    """Async client with dependency override."""
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac
+    
+    app.dependency_overrides.clear()

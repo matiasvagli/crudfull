@@ -1,9 +1,16 @@
 from beanie import Document
 from pydantic import BaseModel, Field
+{% if has_optional %}from typing import Optional{% endif %}
+{% if has_datetime %}from datetime import datetime{% endif %}
+{% if has_uuid %}from uuid import UUID{% endif %}
 
 class {{ model_name }}Document(Document):
-{% for field_name, field_type in fields.items() %}
-    {{ field_name }}: {{ field_type }}
+{% for field_name, field_data in fields.items() %}
+    {%- if field_data.optional %}
+    {{ field_name }}: Optional[{{ 'UUID' if field_data.type == 'uuid' else field_data.type }}] = None
+    {%- else %}
+    {{ field_name }}: {{ 'UUID' if field_data.type == 'uuid' else field_data.type }}
+    {%- endif %}
 {% endfor %}
 
     class Settings:
