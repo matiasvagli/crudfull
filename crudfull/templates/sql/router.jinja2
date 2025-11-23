@@ -4,13 +4,16 @@ from typing import List
 
 from .schemas import {{ model_name }}Create, {{ model_name }}Update, {{ model_name }}Response
 from .service import {{ model_name }}Service
-# Adjust this import based on your project structure
-# from database import get_db 
-# For now, assuming a relative import or a known location
+
+# Import get_db from the project's database configuration
 try:
-    from database import get_db
+    from app.db.session import get_db
 except ImportError:
-    from ...database_examples.database_sql_example import get_db
+    # Fallback for different project structures
+    try:
+        from database import get_db
+    except ImportError:
+        from ...database_examples.database_sql_example import get_db
 
 router = APIRouter(prefix="/{{ resource }}", tags=["{{ model_name }}"])
 

@@ -3,8 +3,14 @@ from beanie import init_beanie
 import os
 
 async def init_db():
-    client = AsyncIOMotorClient("mongodb://localhost:27017")
-    # Initialize beanie with the Product document class and a database
-    # You need to import your models here to register them
-    # from app.users.models import User
-    await init_beanie(database=client.db_name, document_models=[])
+    """Initialize Beanie with MongoDB. Fails gracefully if DB is not available."""
+    try:
+        mongo_url = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+        client = AsyncIOMotorClient(mongo_url)
+        # Initialize beanie with the Product document class and a database
+        # You need to import your models here to register them
+        # from app.users.models import User
+        await init_beanie(database=client.db_name, document_models=[])
+    except Exception as e:
+        print(f"⚠️  Warning: Could not connect to MongoDB: {e}")
+        print("💡 Tip: Set MONGO_URL environment variable or start MongoDB")

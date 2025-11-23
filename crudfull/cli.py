@@ -24,12 +24,16 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-generate_app = typer.Typer(help="Generador de recursos.")
+generate_app = typer.Typer(help="Generar recursos CRUD")
 app.add_typer(generate_app, name="generate")
 
-version_app = typer.Typer(help="Versión de la librería.")
+add_app = typer.Typer(help="Agregar funcionalidades al proyecto")
+app.add_typer(add_app, name="add")
+
+version_app = typer.Typer(help="Ver versión de crudfull")
 app.add_typer(version_app, name="version")
-sync_app = typer.Typer(help="Sincroniza todos los routers existentes con main.py")
+
+sync_app = typer.Typer(help="Sincronizar routers en main.py")
 app.add_typer(sync_app, name="sync-routers")
 
 
@@ -142,6 +146,80 @@ def ensure_compose_has_service(compose_path: str, service_key: str, service_bloc
 
 
 # ===========================
+# ADD AUTH
+# ===========================
+@add_app.command("auth")
+def add_auth(
+    auth_type: str = typer.Option("jwt", "--type", help="jwt | oauth2 | session"),
+):
+    """
+    Agrega autenticación al proyecto actual.
+    """
+    typer.echo(f"🔐 Agregando autenticación ({auth_type}) al proyecto...")
+    
+    # Check if we're in a crudfull project
+    config_path = os.path.join(os.getcwd(), "crudfull.json")
+    if not os.path.exists(config_path):
+        typer.echo("❌ No se encontró crudfull.json. ¿Estás en un proyecto crudfull?")
+        typer.echo("💡 Tip: Ejecutá 'crudfull new mi_proyecto' primero")
+        raise typer.Exit(code=1)
+    
+    # Read project config
+    import json
+    with open(config_path, "r") as f:
+        config = json.load(f)
+    
+    db = config.get("db", "sql")
+    
+    context = {
+        "db": db,
+        "auth_type": auth_type
+    }
+    
+    # Create auth module directory
+    auth_dir = os.path.join("app", "auth")
+    os.makedirs(auth_dir, exist_ok=True)
+    write_file(auth_dir, "__init__.py", "")
+    
+    # Create core directory for security config
+    core_dir = os.path.join("app", "core")
+    os.makedirs(core_dir, exist_ok=True)
+    write_file(core_dir, "__init__.py", "")
+    
+    # Generate auth files
+    schemas_content = render_template("auth/schemas.jinja2", context)
+    write_file(auth_dir, "schemas.py", schemas_content)
+    
+    models_content = render_template("auth/models.jinja2", context)
+    write_file(auth_dir, "models.py", models_content)
+    
+    service_content = render_template("auth/service.jinja2", context)
+    write_file(auth_dir, "service.py", service_content)
+    
+    router_content = render_template("auth/router.jinja2", context)
+    write_file(auth_dir, "router.py", router_content)
+    
+    dependencies_content = render_template("auth/dependencies.jinja2", context)
+    write_file(auth_dir, "dependencies.py", dependencies_content)
+    
+    security_content = render_template("auth/security.jinja2", context)
+    write_file(core_dir, "security.py", security_content)
+    
+    typer.echo("\n✅ Módulo de autenticación generado exitosamente!")
+    typer.echo(f"📂 app/auth/ - Módulo de autenticación")
+    typer.echo(f"📂 app/core/security.py - Configuración JWT")
+    typer.echo("\n📝 Próximos pasos:")
+    typer.echo("1. Instalar dependencias: pip install 'crudfull[auth]'")
+    typer.echo("2. Agregar el router en app/main.py:")
+    typer.echo("   from app.auth.router import router as auth_router")
+    typer.echo("   app.include_router(auth_router)")
+    typer.echo("\n3. Proteger rutas con:")
+    typer.echo("   from app.auth.dependencies import get_current_user")
+    typer.echo("   @router.get('/protected')")
+    typer.echo("   async def protected(user = Depends(get_current_user)):")
+
+
+# ===========================
 # NEW PROJECT
 # ===========================
 @app.command("new")
@@ -172,6 +250,9 @@ def new_project(
     }
 
     # Render and write files
+    # 0. Root __init__.py (to make app importable)
+    write_file(name, "__init__.py", "")
+    
     # 1. main.py
     main_content = render_template("project/main.jinja2", context)
     write_file(os.path.join(name, "app"), "main.py", main_content)
@@ -181,11 +262,16 @@ def new_project(
     if db == "sql":
         db_content = render_template("project/database_sql.jinja2", context)
         write_file(os.path.join(name, "app", "db"), "session.py", db_content)
+        write_file(os.path.join(name, "app", "db"), "__init__.py", "")
     elif db == "mongo":
         db_content = render_template("project/database_mongo.jinja2", context)
         write_file(os.path.join(name, "app", "db"), "session.py", db_content)
+        write_file(os.path.join(name, "app", "db"), "__init__.py", "")
     
-    write_file(os.path.join(name, "app", "db"), "__init__.py", "")
+    # 3.1 Test configuration (conftest.py)
+    conftest_content = render_template("project/conftest.jinja2", context)
+    write_file(os.path.join(name, "tests"), "conftest.py", conftest_content)
+    write_file(os.path.join(name, "tests"), "__init__.py", "")
 
     # 3. Requirements
     req_content = render_template("project/requirements.jinja2", context)
@@ -195,16 +281,24 @@ def new_project(
     git_content = render_template("project/gitignore.jinja2", context)
     write_file(name, ".gitignore", git_content)
 
-    # 5. Docker (Optional)
+    # 5. Docker files (optional)
     if docker:
-        dc_content = render_template("project/docker_compose.jinja2", context)
-        write_file(name, "docker-compose.yml", dc_content)
+        docker_compose_content = render_template("project/docker_compose.jinja2", context)
+        write_file(name, "docker-compose.yml", docker_compose_content)
         
-        df_content = render_template("project/dockerfile.jinja2", context)
-        write_file(name, "Dockerfile", df_content)
+        dockerfile_content = render_template("project/dockerfile.jinja2", context)
+        write_file(name, "Dockerfile", dockerfile_content)
         
         env_content = render_template("project/env.jinja2", context)
         write_file(name, ".env", env_content)
+    
+    # 5.1 Docker Dev files (always generated for SQL/Mongo)
+    if db != 'ghost':
+        docker_compose_dev_content = render_template("project/docker_compose_dev.jinja2", context)
+        write_file(name, "docker-compose.dev.yml", docker_compose_dev_content)
+        
+        env_dev_content = render_template("project/env_dev.jinja2", context)
+        write_file(name, ".env.dev", env_dev_content)
 
     # 6. Copy static assets (logos, CSS, etc.)
     templates_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -218,8 +312,14 @@ def new_project(
     typer.echo(f"\n🚀 Proyecto {name} creado exitosamente!")
     typer.echo(f"📂 cd {name}")
     if docker:
-        typer.echo("🐳 docker-compose up -d --build")
-    else:
+        typer.echo("\n🐳 Modo Producción:")
+        typer.echo("   docker-compose up -d --build")
+    if db != 'ghost':
+        typer.echo("\n🔧 Modo Desarrollo (solo DB):")
+        typer.echo("   docker-compose -f docker-compose.dev.yml up -d")
+        typer.echo("   pip install -r requirements.txt")
+        typer.echo("   uvicorn app.main:app --reload")
+    if not docker and db == 'ghost':
         typer.echo("📦 pip install -r requirements.txt")
         typer.echo("▶️  uvicorn app.main:app --reload")
     
@@ -364,6 +464,50 @@ def generate_resource(
     write_file(os.path.join("tests", resource), "__init__.py", "")
     write_file(os.path.join("tests", resource), f"test_{resource}.py", test_content)
 
+    # Auto-register router in main.py
+    main_path = os.path.join("app", "main.py")
+    if os.path.exists(main_path):
+        with open(main_path, "r") as f:
+            main_content = f.read()
+        
+        import_line = f"from app.{resource}.router import router as {resource}_router"
+        include_line = f"app.include_router({resource}_router)"
+        
+        # Add import if not present
+        if import_line not in main_content:
+            # Find the last import line
+            lines = main_content.split("\n")
+            import_idx = 0
+            for i, line in enumerate(lines):
+                if line.startswith("from ") or line.startswith("import "):
+                    import_idx = i + 1
+            lines.insert(import_idx, import_line)
+            main_content = "\n".join(lines)
+        
+        # Add include_router if not present
+        if include_line not in main_content:
+            # Find where to insert (after app = FastAPI(...))
+            lines = main_content.split("\n")
+            for i, line in enumerate(lines):
+                if "app = FastAPI" in line:
+                    # Find the closing parenthesis
+                    j = i
+                    while j < len(lines) and ")" not in lines[j]:
+                        j += 1
+                    lines.insert(j + 1, f"\n{include_line}")
+                    break
+            main_content = "\n".join(lines)
+        
+        with open(main_path, "w") as f:
+            f.write(main_content)
+        
+        typer.echo(f"✅ Router '{resource}' registrado automáticamente en main.py")
+
+    typer.echo(f"\n🎉 Recurso '{name}' generado exitosamente!")
+    typer.echo(f"📂 app/{resource}/ - Módulo completo")
+    typer.echo(f"📂 tests/{resource}/ - Tests")
+    typer.echo(f"📚 Docs: http://localhost:8000/docs")
+
 
 
 # =====================================================================
@@ -479,9 +623,10 @@ def find_all_routers():
     1. routers/*_router.py (Legacy/Flat)
     2. app/*/router.py (Modular)
     """
+    import glob
     router_files = []
 
-    # 1. Legacy
+    # 1. Legacy routers/*_router.py
     routers_dir = os.path.join(os.getcwd(), "routers")
     if os.path.exists(routers_dir):
         for filename in os.listdir(routers_dir):
@@ -492,21 +637,20 @@ def find_all_routers():
                     "type": "legacy",
                     "module": f"routers.{name}_router"
                 })
-
-    # 2. Modular
-    app_dir = os.path.join(os.getcwd(), "app")
-    if os.path.exists(app_dir):
-        for module_name in os.listdir(app_dir):
-            module_path = os.path.join(app_dir, module_name)
-            if os.path.isdir(module_path):
-                router_path = os.path.join(module_path, "router.py")
-                if os.path.exists(router_path):
-                    router_files.append({
-                        "name": module_name,
-                        "type": "modular",
-                        "module": f"app.{module_name}.router"
-                    })
-
+    
+    # 2. Modular app/*/router.py
+    pattern = os.path.join("app", "*", "router.py")
+    for router_file in glob.glob(pattern):
+        # Extraer el nombre del módulo (ej: app/users/router.py -> users)
+        parts = router_file.split(os.sep)
+        if len(parts) >= 2:
+            module_name = parts[1]  # 'users' de app/users/router.py
+            router_files.append({
+                "name": module_name,
+                "type": "modular", # Added type for consistency with original structure
+                "module": f"app.{module_name}.router"
+            })
+    
     return router_files
 
 @sync_app.command("run")

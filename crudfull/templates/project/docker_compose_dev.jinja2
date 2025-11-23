@@ -1,0 +1,32 @@
+{% if db == 'sql' %}
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dev_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-dev_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_dev_data:
+{% elif db == 'mongo' %}
+services:
+  db:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-dev_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-dev_password}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_dev_data:/data/db
+
+volumes:
+  mongo_dev_data:
+{% endif %}

@@ -1,99 +1,80 @@
 import pytest
 {% if has_datetime %}from datetime import datetime{% endif %}
-{% if has_uuid %}import uuid{% endif %}
-# from app.{{ resource }}.schemas import {{ model_name }}Create, {{ model_name }}Update
+{% if has_uuid %}from uuid import uuid4{% endif %}
 
-# Resource: {{ resource }}
-# Model: {{ model_name }}
+# Tests for {{ resource }}
 
-@pytest.mark.asyncio
-async def test_create_{{ singular }}(client):
-    response = {% if db == 'ghost' %}client{% else %}await client{% endif %}.post("/{{ resource }}/", json={
-        {% for field_name, field_data in fields.items() %}
-        {%- if not field_data.optional and field_name != 'id' %}
-        "{{ field_name }}": {% if field_data.type == 'int' %}1{% elif field_data.type == 'str' %}"test"{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.now().isoformat(){% elif field_data.type == 'uuid' %}str(uuid.uuid4()){% else %}"test"{% endif %},
-        {%- endif %}
-        {% endfor %}
+def test_create_{{ singular }}(client):
+    response = client.post("/{{ resource }}/", json={
+{% for field_name, field_data in fields.items() %}
+        "{{ field_name }}": {% if field_data.type == 'str' %}"test"{% elif field_data.type == 'int' %}1{% elif field_data.type == 'float' %}1.0{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.utcnow().isoformat(){% elif field_data.type == 'uuid' %}str(uuid4()){% else %}"test"{% endif %},
+{% endfor %}
     })
     assert response.status_code == 200
     data = response.json()
-    {% if db == 'mongo' %}
-    assert data["id"] is not None # Mongo ID mapped to id in response schema
-    {% else %}
+    {% if db != 'ghost' %}
     assert data["id"] is not None
     {% endif %}
 
-@pytest.mark.asyncio
-async def test_read_{{ resource }}(client):
+def test_read_{{ resource }}(client):
     # Create one first
-    {% if db == 'ghost' %}client{% else %}await client{% endif %}.post("/{{ resource }}/", json={
+    client.post("/{{ resource }}/", json={
         {% for field_name, field_data in fields.items() %}
-        {%- if not field_data.optional and field_name != 'id' %}
-        "{{ field_name }}": {% if field_data.type == 'int' %}2{% elif field_data.type == 'str' %}"test2"{% elif field_data.type == 'bool' %}False{% elif field_data.type == 'datetime' %}datetime.now().isoformat(){% elif field_data.type == 'uuid' %}str(uuid.uuid4()){% else %}"test2"{% endif %},
+        {%- if field_name != 'id' %}
+        "{{ field_name }}": {% if field_data.type == 'int' %}2{% elif field_data.type == 'str' %}"test2"{% elif field_data.type == 'float' %}2.0{% elif field_data.type == 'bool' %}False{% elif field_data.type == 'datetime' %}datetime.utcnow().isoformat(){% elif field_data.type == 'uuid' %}str(uuid4()){% else %}"test2"{% endif %},
         {%- endif %}
         {% endfor %}
     })
     
-    response = {% if db == 'ghost' %}client{% else %}await client{% endif %}.get("/{{ resource }}/")
+    response = client.get("/{{ resource }}/")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
     assert len(data) > 0
 
-@pytest.mark.asyncio
-async def test_read_{{ singular }}(client):
+def test_read_{{ singular }}(client):
     # Create one
-    create_res = {% if db == 'ghost' %}client{% else %}await client{% endif %}.post("/{{ resource }}/", json={
-        {% for field_name, field_data in fields.items() %}
-        {%- if not field_data.optional and field_name != 'id' %}
-        "{{ field_name }}": {% if field_data.type == 'int' %}3{% elif field_data.type == 'str' %}"test3"{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.now().isoformat(){% elif field_data.type == 'uuid' %}str(uuid.uuid4()){% else %}"test3"{% endif %},
-        {%- endif %}
-        {% endfor %}
+    create_res = client.post("/{{ resource }}/", json={
+{% for field_name, field_data in fields.items() %}
+        "{{ field_name }}": {% if field_data.type == 'str' %}"test3"{% elif field_data.type == 'int' %}3{% elif field_data.type == 'float' %}3.0{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.utcnow().isoformat(){% elif field_data.type == 'uuid' %}str(uuid4()){% else %}"test3"{% endif %},
+{% endfor %}
     })
     item_id = create_res.json()["id"]
     
-    response = {% if db == 'ghost' %}client{% else %}await client{% endif %}.get(f"/{{ resource }}/{item_id}")
+    response = client.get(f"/{{ resource }}/{item_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == item_id
 
-@pytest.mark.asyncio
-async def test_update_{{ singular }}(client):
+def test_update_{{ singular }}(client):
     # Create one
-    create_res = {% if db == 'ghost' %}client{% else %}await client{% endif %}.post("/{{ resource }}/", json={
-        {% for field_name, field_data in fields.items() %}
-        {%- if not field_data.optional and field_name != 'id' %}
-        "{{ field_name }}": {% if field_data.type == 'int' %}4{% elif field_data.type == 'str' %}"test4"{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.now().isoformat(){% elif field_data.type == 'uuid' %}str(uuid.uuid4()){% else %}"test4"{% endif %},
-        {%- endif %}
-        {% endfor %}
+    create_res = client.post("/{{ resource }}/", json={
+{% for field_name, field_data in fields.items() %}
+        "{{ field_name }}": {% if field_data.type == 'str' %}"test4"{% elif field_data.type == 'int' %}4{% elif field_data.type == 'float' %}4.0{% elif field_data.type == 'bool' %}False{% elif field_data.type == 'datetime' %}datetime.utcnow().isoformat(){% elif field_data.type == 'uuid' %}str(uuid4()){% else %}"test4"{% endif %},
+{% endfor %}
     })
     item_id = create_res.json()["id"]
     
     # Update
-    response = {% if db == 'ghost' %}client{% else %}await client{% endif %}.patch(f"/{{ resource }}/{item_id}", json={
-        {% for field_name, field_data in fields.items() %}
-        {%- if not field_data.optional and field_name != 'id' %}
-        "{{ field_name }}": {% if field_data.type == 'int' %}5{% elif field_data.type == 'str' %}"updated"{% elif field_data.type == 'bool' %}False{% elif field_data.type == 'datetime' %}datetime.now().isoformat(){% elif field_data.type == 'uuid' %}str(uuid.uuid4()){% else %}"updated"{% endif %},
-        {%- endif %}
-        {% endfor %}
+    response = client.patch(f"/{{ resource }}/{item_id}", json={
+{% for field_name, field_data in fields.items() %}
+        "{{ field_name }}": {% if field_data.type == 'str' %}"updated"{% elif field_data.type == 'int' %}5{% elif field_data.type == 'float' %}5.0{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.utcnow().isoformat(){% elif field_data.type == 'uuid' %}str(uuid4()){% else %}"updated"{% endif %},
+{% endfor %}
     })
     assert response.status_code == 200
 
-@pytest.mark.asyncio
-async def test_delete_{{ singular }}(client):
+def test_delete_{{ singular }}(client):
     # Create one
-    create_res = {% if db == 'ghost' %}client{% else %}await client{% endif %}.post("/{{ resource }}/", json={
-        {% for field_name, field_data in fields.items() %}
-        {%- if not field_data.optional and field_name != 'id' %}
-        "{{ field_name }}": {% if field_data.type == 'int' %}6{% elif field_data.type == 'str' %}"test6"{% elif field_data.type == 'bool' %}True{% elif field_data.type == 'datetime' %}datetime.now().isoformat(){% elif field_data.type == 'uuid' %}str(uuid.uuid4()){% else %}"test6"{% endif %},
-        {%- endif %}
-        {% endfor %}
+    create_res = client.post("/{{ resource }}/", json={
+{% for field_name, field_data in fields.items() %}
+        "{{ field_name }}": {% if field_data.type == 'str' %}"test6"{% elif field_data.type == 'int' %}6{% elif field_data.type == 'float' %}6.0{% elif field_data.type == 'bool' %}False{% elif field_data.type == 'datetime' %}datetime.utcnow().isoformat(){% elif field_data.type == 'uuid' %}str(uuid4()){% else %}"test6"{% endif %},
+{% endfor %}
     })
     item_id = create_res.json()["id"]
     
-    response = {% if db == 'ghost' %}client{% else %}await client{% endif %}.delete(f"/{{ resource }}/{item_id}")
+    response = client.delete(f"/{{ resource }}/{item_id}")
     assert response.status_code == 200
     
     # Verify it's gone
-    get_res = {% if db == 'ghost' %}client{% else %}await client{% endif %}.get(f"/{{ resource }}/{item_id}")
+    get_res = client.get(f"/{{ resource }}/{item_id}")
     assert get_res.status_code == 404

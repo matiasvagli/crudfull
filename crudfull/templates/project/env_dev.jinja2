@@ -1,0 +1,19 @@
+{% if db == 'sql' %}
+# Development Database Configuration
+POSTGRES_USER=dev_user
+POSTGRES_PASSWORD=dev_password
+POSTGRES_DB=dev_db
+
+# Application Database URL
+DATABASE_URL=postgresql+asyncpg://dev_user:dev_password@localhost:5432/dev_db
+{% elif db == 'mongo' %}
+# Development Database Configuration
+MONGO_INITDB_ROOT_USERNAME=dev_user
+MONGO_INITDB_ROOT_PASSWORD=dev_password
+
+# Application Database URL
+MONGO_URL=mongodb://dev_user:dev_password@localhost:27017
+{% endif %}
+
+# JWT Secret (change in production!)
+SECRET_KEY=dev-secret-key-change-in-production
