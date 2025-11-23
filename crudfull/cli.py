@@ -142,6 +142,89 @@ def ensure_compose_has_service(compose_path: str, service_key: str, service_bloc
 
 
 # ===========================
+# NEW PROJECT
+# ===========================
+@app.command("new")
+def new_project(
+    name: str = typer.Argument(..., help="Nombre del proyecto"),
+    db: str = typer.Option("sql", "--db", help="ghost | sql | mongo"),
+    docker: bool = typer.Option(False, "--docker", help="Incluir Dockerfile y docker-compose.yml"),
+):
+    """
+    Crea un nuevo proyecto FastAPI con la arquitectura modular recomendada.
+    """
+    typer.echo(f"✨ Creando nuevo proyecto: {name} (DB: {db})")
+
+    project_dir = os.path.join(os.getcwd(), name)
+    if os.path.exists(project_dir):
+        typer.echo(f"❌ El directorio {name} ya existe.")
+        raise typer.Exit(code=1)
+
+    # Create directories
+    os.makedirs(project_dir)
+    os.makedirs(os.path.join(project_dir, "app"))
+    os.makedirs(os.path.join(project_dir, "app", "db"))
+    os.makedirs(os.path.join(project_dir, "tests"))
+
+    context = {
+        "project_name": name,
+        "db": db
+    }
+
+    # Render and write files
+    # 1. main.py
+    main_content = render_template("project/main.jinja2", context)
+    write_file(os.path.join(name, "app"), "main.py", main_content)
+    write_file(os.path.join(name, "app"), "__init__.py", "")
+
+    # 2. Database setup
+    if db == "sql":
+        db_content = render_template("project/database_sql.jinja2", context)
+        write_file(os.path.join(name, "app", "db"), "session.py", db_content)
+    elif db == "mongo":
+        db_content = render_template("project/database_mongo.jinja2", context)
+        write_file(os.path.join(name, "app", "db"), "session.py", db_content)
+    
+    write_file(os.path.join(name, "app", "db"), "__init__.py", "")
+
+    # 3. Requirements
+    req_content = render_template("project/requirements.jinja2", context)
+    write_file(name, "requirements.txt", req_content)
+
+    # 4. Gitignore
+    git_content = render_template("project/gitignore.jinja2", context)
+    write_file(name, ".gitignore", git_content)
+
+    # 5. Docker (Optional)
+    if docker:
+        dc_content = render_template("project/docker_compose.jinja2", context)
+        write_file(name, "docker-compose.yml", dc_content)
+        
+        df_content = render_template("project/dockerfile.jinja2", context)
+        write_file(name, "Dockerfile", df_content)
+        
+        env_content = render_template("project/env.jinja2", context)
+        write_file(name, ".env", env_content)
+
+    typer.echo(f"\n🚀 Proyecto {name} creado exitosamente!")
+    typer.echo(f"📂 cd {name}")
+    if docker:
+        typer.echo("🐳 docker-compose up -d --build")
+    else:
+        typer.echo("📦 pip install -r requirements.txt")
+        typer.echo("▶️  uvicorn app.main:app --reload")
+    
+    # 6. Create crudfull.json config
+    config = {
+        "project_name": name,
+        "db": db
+    }
+    import json
+    with open(os.path.join(name, "crudfull.json"), "w") as f:
+        json.dump(config, f, indent=2)
+
+
+# ===========================
 # VERSION
 # ===========================
 @version_app.command("show")
@@ -150,49 +233,33 @@ def show_version():
 
 
 # ===========================
-# GENERATE RESOURCE
+# GENERATE RESOURCE (MODULAR DEFAULT)
 # ===========================
 @generate_app.command("resource")
 def generate_resource(
-    name: str = typer.Argument(..., help="Nombre del modelo"),
+    name: str = typer.Argument(..., help="Nombre del recurso (plural, ej: users)"),
     fields: list[str] = typer.Argument(..., help="Campos en formato nombre:tipo"),
-    db: str = typer.Option("ghost", "--db", help="ghost | sql | mongo"),
-    docker: bool = typer.Option(False, "--docker", help="Crear docker-compose.yml y .env (solo para --db mongo)"),
-    force: bool = typer.Option(False, "--force", "-f", help="Forzar sobrescritura si el recurso ya existe"),
+    db: str = typer.Option(None, "--db", help="ghost | sql | mongo"),
+    force: bool = typer.Option(False, "--force", "-f", help="Forzar sobrescritura"),
 ):
-    typer.echo(f"🔥 Generando RESOURCE: {name} con motor: {db}")
-
-    # ---- Comprobación no invasiva de dependencias ----
-    missing = []
-    if db == "mongo":
+    # Try to load config
+    config_path = os.path.join(os.getcwd(), "crudfull.json")
+    if db is None and os.path.exists(config_path):
+        import json
         try:
-            import beanie  # noqa: F401
-            import motor  # noqa: F401
+            with open(config_path, "r") as f:
+                config = json.load(f)
+                db = config.get("db")
+                typer.echo(f"⚙️  Usando configuración del proyecto: DB={db}")
         except Exception:
-            missing = ["beanie", "motor"]
-    elif db == "sql":
-        try:
-            import sqlalchemy  # noqa: F401
-            import asyncpg  # noqa: F401
-        except Exception:
-            missing = ["sqlalchemy", "asyncpg"]
+            pass
+    
+    if db is None:
+        db = "sql" # Default fallback
 
-    if missing:
-        typer.secho("\n⚠️  Dependencias faltantes detectadas:", fg="yellow")
-        typer.secho(f"  Para --db {db} faltan: {', '.join(missing)}\n", fg="yellow")
-        typer.echo("Opciones para instalarlas:")
-        # sugerencias pip y poetry
-        if db == "mongo":
-            typer.echo("  pip:\n    pip install motor beanie")
-            typer.echo("  o (si usas extras del paquete):\n    pip install 'crudfull[mongo]'")
-            typer.echo("  poetry:\n    poetry add motor beanie")
-        elif db == "sql":
-            typer.echo("  pip:\n    pip install sqlalchemy asyncpg")
-            typer.echo("  o (si usas extras del paquete):\n    pip install 'crudfull[sql]'")
-            typer.echo("  poetry:\n    poetry add sqlalchemy asyncpg")
+    typer.echo(f"📦 Generando RECURSO (Modular): {name} con motor: {db}")
 
-        typer.echo("\nNota: No se instalarán paquetes automáticamente. Instálalos manualmente o activa un entorno adecuado (venv/poetry).\n")
-
+    # Parse fields (reuse logic or extract to helper)
     parsed_fields = {}
     has_optional = False
     has_datetime = False
@@ -221,211 +288,73 @@ def generate_resource(
             "optional": is_optional
         }
 
-    model_name = name
-    model_file = name.lower()
+    model_name = name.capitalize()
+    # Remove 's' for singular if possible, very naive pluralization fix
+    if model_name.endswith("s"):
+        singular = model_name[:-1]
+    else:
+        singular = model_name
     
-    # Smart pluralization
-    p = inflect.engine()
-    resource = p.plural(model_file)
-    
-    singular = model_file
+    resource = name.lower()
 
     context = {
-        "model_name": model_name,
-        "model_file": model_file,
+        "model_name": singular, # Class name (User)
+        "resource": resource,   # URL prefix (users)
+        "singular": singular.lower(), # var name (user)
         "fields": parsed_fields,
-        "resource": resource,
-        "singular": singular,
-        "docker": docker,
         "has_optional": has_optional,
         "has_datetime": has_datetime,
         "has_uuid": has_uuid,
     }
 
-    # --------------------------
-    # PROTECCIÓN: evitar sobrescribir recursos existentes
-    # --------------------------
-    conflicts = []
-    models_path = os.path.join(os.getcwd(), "models", f"{model_file}.py")
-    routers_path = os.path.join(os.getcwd(), "routers", f"{model_file}_router.py")
-    services_dir = os.path.join(os.getcwd(), "services")
+    # Directory Structure
+    base_path = os.path.join(os.getcwd(), "app", resource)
+    os.makedirs(base_path, exist_ok=True)
+    
+    # Create __init__.py
+    write_file(os.path.join("app", resource), "__init__.py", "")
 
-    if os.path.exists(models_path):
-        conflicts.append(models_path)
-    if os.path.exists(routers_path):
-        conflicts.append(routers_path)
-
-    # comprobar cualquier servicio existente que comience con el prefijo del recurso
-    if os.path.exists(services_dir):
-        for fname in os.listdir(services_dir):
-            if fname.startswith(f"{model_file}_service_"):
-                conflicts.append(os.path.join(services_dir, fname))
-
-    if conflicts and not force:
-        typer.secho("\n❌ Error: Ya existen archivos para este recurso:\n", fg="red")
-        for c in conflicts:
-            typer.echo(f"  - {c}")
-        typer.echo("\nSi quieres sobrescribirlos usa el flag `--force` o elimina manualmente los archivos existentes.")
+    # Define templates based on DB
+    if db == "sql":
+        files = {
+            "schemas.py": "sql/schemas.jinja2",
+            "models.py": "sql/models.jinja2",
+            "service.py": "sql/service.jinja2",
+            "router.py": "sql/router.jinja2",
+        }
+    elif db == "mongo":
+        files = {
+            "schemas.py": "mongo/schemas.jinja2",
+            "models.py": "mongo/models.jinja2",
+            "service.py": "mongo/service.jinja2",
+            "router.py": "mongo/router.jinja2",
+        }
+    elif db == "ghost":
+        files = {
+            "schemas.py": "ghost/schemas.jinja2",
+            "service.py": "ghost/service.jinja2",
+            "router.py": "ghost/router.jinja2",
+        }
+    else:
+        typer.echo(f"❌ Motor {db} no soportado.")
         raise typer.Exit(code=1)
-    elif conflicts and force:
-        typer.secho("⚠️  Advertencia: se sobrescribirán los siguientes archivos:\n", fg="yellow")
-        for c in conflicts:
-            typer.echo(f"  - {c}")
-        typer.echo("")
 
-    # MODEL
-    model_tpl = {
-        "ghost": "ghost/model.jinja2",
-        "sql": "sql/model_sql.jinja2",
-        "mongo": "mongo/model_mongo.jinja2",
-    }[db]
+    # Generate files
+    for filename, tpl_path in files.items():
+        content = render_template(tpl_path, context)
+        write_file(os.path.join("app", resource), filename, content)
 
-    model_code = render_template(model_tpl, context)
-    write_file("models", f"{model_file}.py", model_code)
-
-    # SERVICE
-    service_tpl = {
-        "ghost": "ghost/service.jinja2",
-        "sql": "sql/service_sql.jinja2",
-        "mongo": "mongo/service_mongo.jinja2",
-    }[db]
-
-    service_filename = f"{model_file}_service_{db}.py"
-    service_code = render_template(service_tpl, context)
-    write_file("services", service_filename, service_code)
-
-    # ROUTER
-    router_tpl = {
-        "ghost": "ghost/router.jinja2",
-        "sql": "sql/router_sql.jinja2",
-        "mongo": "mongo/router_mongo.jinja2",
-    }[db]
-
-    router_code = render_template(router_tpl, context)
-    write_file("routers", f"{model_file}_router.py", router_code)
-
-    # DB EXAMPLES
-    if db == "sql":
-        example = render_template("sql/database_sql_example.jinja2", context)
-        write_file("database_examples", "database_sql_example.py", example)
-        
-        # Generate create_tables script
-        script_content = render_template("sql/create_tables.jinja2", context)
-        write_file("scripts", "create_tables.py", script_content)
-
-    if db == "mongo":
-        example = render_template("mongo/database_mongo_example.jinja2", context)
-        write_file("database_examples", "database_mongo_example.py", example)
-
-    # --------------------------
-    # GENERATE TESTS (Unified)
-    # --------------------------
-    conftest_tpl = {
-        "sql": "sql/conftest.jinja2",
-        "mongo": "mongo/conftest.jinja2",
-        "ghost": "ghost/conftest.jinja2"
-    }.get(db)
-
-    test_tpl = {
-        "sql": "sql/test_resource.jinja2",
-        "mongo": "mongo/test_resource.jinja2",
-        "ghost": "ghost/test_resource.jinja2"
-    }.get(db)
-
-    if conftest_tpl and not os.path.exists(os.path.join(os.getcwd(), "tests", "conftest.py")):
-        conftest = render_template(conftest_tpl, context)
-        write_file("tests", "conftest.py", conftest)
-
-    if test_tpl:
-        test_file = render_template(test_tpl, context)
-        write_file("tests", f"test_{model_file}.py", test_file)
-        
-        typer.echo("\n🧪 Tests generados en tests/")
-        typer.echo("   Para ejecutarlos, instala las dependencias de test:")
-        typer.echo("   pip install 'crudfull[test]'")
-        typer.echo("   Luego corre: pytest\n")
-
-    # Si se pidió docker, generar/actualizar docker-compose de forma no invasiva
-    if docker:
-        compose_path = os.path.join(os.getcwd(), "docker-compose.dev.yml")
-        env_path = os.path.join(os.getcwd(), ".env")
-
-        if db == "mongo":
-            typer.echo("📦 Asegurando servicio Mongo en docker-compose.dev.yml y variables en .env...")
-            mongo_service = (
-                "  mongo:\n"
-                "    image: mongo:6.0\n"
-                "    container_name: crudfull_mongo\n"
-                "    ports:\n"
-                "      - \"${MONGO_PORT}:27017\"\n"
-                "    environment:\n"
-                "      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}\n"
-                "      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}\n"
-                "      - MONGO_INITDB_DATABASE=${MONGO_DATABASE}\n"
-                "    volumes:\n"
-                "      - mongo_data:/data/db\n"
-            )
-
-            env_vars = {
-                "MONGO_INITDB_ROOT_USERNAME": "crudfull_user",
-                "MONGO_INITDB_ROOT_PASSWORD": "changeme",
-                "MONGO_DATABASE": "mydb",
-                "MONGO_HOST": "mongo",
-                "MONGO_PORT": "27017",
-            }
-
-            ensure_compose_has_service(compose_path, "mongo:", mongo_service, ["mongo_data"])
-            ensure_env_file(env_path, env_vars)
-
-        if db == "sql":
-            typer.echo("📦 Asegurando servicio Postgres en docker-compose.dev.yml y variables en .env...")
-            pg_service = (
-                "  postgres:\n"
-                "    image: postgres:15\n"
-                "    container_name: crudfull_postgres\n"
-                "    ports:\n"
-                "      - \"${POSTGRES_PORT}:5432\"\n"
-                "    environment:\n"
-                "      - POSTGRES_USER=${POSTGRES_USER}\n"
-                "      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n"
-                "      - POSTGRES_DB=${POSTGRES_DB}\n"
-                "    volumes:\n"
-                "      - postgres_data:/var/lib/postgresql/data\n"
-            )
-
-            env_vars = {
-                "POSTGRES_USER": "crudfull_user",
-                "POSTGRES_PASSWORD": "changeme",
-                "POSTGRES_DB": "crudfulldb",
-                "POSTGRES_HOST": "postgres",
-                "POSTGRES_PORT": "5432",
-            }
-
-            ensure_compose_has_service(compose_path, "postgres:", pg_service, ["postgres_data"])
-            ensure_env_file(env_path, env_vars)
-
+    # Generate Test
+    test_context = context.copy()
+    test_context["db"] = db
+    test_content = render_template("test_resource.jinja2", test_context)
     
-    # --------------------------
-    # AUTO-INTEGRAR EN main.py
-    # --------------------------
-    integrate_router_into_main(model_file)
-    
-    # --------------------------
-    # Si es SQL, aseguramos que main.py inicialice las tablas en startup
-    # --------------------------
-    if db == "sql":
-        main_path = find_or_create_main()
+    # Create tests/module_name directory
+    test_dir = os.path.join("tests", resource)
+    os.makedirs(test_dir, exist_ok=True)
+    write_file(os.path.join("tests", resource), "__init__.py", "")
+    write_file(os.path.join("tests", resource), f"test_{resource}.py", test_content)
 
-        with open(main_path, "r") as f:
-            content = f.read()
-
-        # 1) importar create_tables si no existe
-        # (Opcional: ya no forzamos esto, el usuario usa el script)
-        pass
-    
-
-    typer.echo("🚀 CRUD generado con éxito!")
-    typer.echo("🔥 Listo para usar en FastAPI")
 
 
 # =====================================================================
@@ -537,36 +466,55 @@ def integrate_router_into_main(model_file: str):
 
 def find_all_routers():
     """
-    Detecta todos los archivos *_router.py en la carpeta routers/.
-    Devuelve una lista como: ["user", "product", "order"]
+    Detecta todos los routers:
+    1. routers/*_router.py (Legacy/Flat)
+    2. app/*/router.py (Modular)
     """
-    routers_dir = os.path.join(os.getcwd(), "routers")
     router_files = []
 
-    if not os.path.exists(routers_dir):
-        return []
+    # 1. Legacy
+    routers_dir = os.path.join(os.getcwd(), "routers")
+    if os.path.exists(routers_dir):
+        for filename in os.listdir(routers_dir):
+            if filename.endswith("_router.py"):
+                name = filename.replace("_router.py", "")
+                router_files.append({
+                    "name": name,
+                    "type": "legacy",
+                    "module": f"routers.{name}_router"
+                })
 
-    for filename in os.listdir(routers_dir):
-        if filename.endswith("_router.py"):
-            name = filename.replace("_router.py", "")
-            router_files.append(name)
+    # 2. Modular
+    app_dir = os.path.join(os.getcwd(), "app")
+    if os.path.exists(app_dir):
+        for module_name in os.listdir(app_dir):
+            module_path = os.path.join(app_dir, module_name)
+            if os.path.isdir(module_path):
+                router_path = os.path.join(module_path, "router.py")
+                if os.path.exists(router_path):
+                    router_files.append({
+                        "name": module_name,
+                        "type": "modular",
+                        "module": f"app.{module_name}.router"
+                    })
 
     return router_files
+
 @sync_app.command("run")
 def sync_routers():
     """
     Escanea todos los routers existentes y los monta en main.py automáticamente.
-    Ideal si agregaste routers manuales o tu main se desincronizó.
     """
 
-    typer.echo("🔎 Buscando routers en ./routers/...")
+    typer.echo("🔎 Buscando routers...")
 
-    router_names = find_all_routers()
+    routers = find_all_routers()
 
-    if not router_names:
-        typer.echo("❌ No se encontraron routers en la carpeta 'routers/'.")
+    if not routers:
+        typer.echo("❌ No se encontraron routers.")
         raise typer.Exit()
 
+    router_names = [r["name"] for r in routers]
     typer.echo(f"📡 Routers detectados: {', '.join(router_names)}")
 
     main_path = find_or_create_main()
@@ -575,18 +523,19 @@ def sync_routers():
         content = f.read()
 
     lines = content.splitlines()
-
     modified = False
 
-    for name in router_names:
-        import_line = f"from routers.{name}_router import router as {name}_router  # agregado por CRUDfull"
+    for r in routers:
+        name = r["name"]
+        module_path = r["module"]
+        
+        import_line = f"from {module_path} import router as {name}_router  # agregado por CRUDfull"
         include_line = f"app.include_router({name}_router)  # agregado por CRUDfull"
 
         # ----------------------------
         # IMPORT
         # ----------------------------
         if import_line not in content:
-            # insertar bajo los imports existentes
             insert_idx = 0
             for i, line in enumerate(lines):
                 if line.startswith("from ") or line.startswith("import "):
@@ -620,10 +569,12 @@ def sync_routers():
         typer.echo("✨ Todo estaba sincronizado. No hubo cambios.")
 
 
-
 # ===========================
 # ENTRYPOINT
 # ===========================
 def main():
     app()
+
+if __name__ == "__main__":
+    main()
 

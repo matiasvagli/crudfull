@@ -1,10 +1,9 @@
-from beanie import Document
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 {% if has_optional %}from typing import Optional{% endif %}
 {% if has_datetime %}from datetime import datetime{% endif %}
 {% if has_uuid %}from uuid import UUID{% endif %}
 
-class {{ model_name }}Document(Document):
+class {{ model_name }}Base(BaseModel):
 {% for field_name, field_data in fields.items() %}
     {%- if field_data.optional %}
     {{ field_name }}: Optional[{{ 'UUID' if field_data.type == 'uuid' else field_data.type }}] = None
@@ -13,5 +12,14 @@ class {{ model_name }}Document(Document):
     {%- endif %}
 {% endfor %}
 
-    class Settings:
-        name = "{{ resource }}"
+class {{ model_name }}Create({{ model_name }}Base):
+    pass
+
+class {{ model_name }}Update({{ model_name }}Base):
+    pass
+
+class {{ model_name }}Response({{ model_name }}Base):
+    id: int
+
+    class Config:
+        from_attributes = True

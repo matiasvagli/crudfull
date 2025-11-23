@@ -179,13 +179,15 @@ crudfull/
 
 ## 🛠️ Roadmap futuro
 
-- 🧪 Generación automática de tests (pytest + httpx)
-- 📦 Comando para generar un proyecto FastAPI completo (`crudfull new project`)
+- ✅ 🧪 Generación automática de tests (pytest + httpx)
+- � **Autenticación**: Comando `crudfull add auth` (Login, JWT, Users).
+- 🔗 **Relaciones**: Soporte para Foreign Keys (ej: `user_id:int:fk=User`).
+- 🎨 **Templates Personalizables**: Usar plantillas propias desde `.crudfull/templates`.
+- �📦 Comando para generar un proyecto FastAPI completo (`crudfull new project`)
 - 🗄️ Compatibilidad con más ORMs (Tortoise ORM, Prisma, SQLModel)
-- ⚙️ Parámetros avanzados: soft deletes, timestamps, UUIDs, relaciones 1:N & N:M
+- ⚙️ Parámetros avanzados: soft deletes, timestamps, UUIDs.
 - 🚀 Publicación oficial en PyPI
 - 📘 Documentación completa con MkDocs + GH Pages
-- 🧩 Plantillas personalizables para el usuario
 - 🛡️ Validaciones avanzadas, manejo de errores y respuestas estándar
 - 🔌 Integración con OpenAPI/Swagger extendida
 - 🧰 Generación de CLI para testear CRUDs automáticamente
@@ -197,6 +199,16 @@ crudfull/
 **CRUDfull** fue creado con pasión y café por:
 
 - **Matías Vagliviello** — Desarrollador & Arquitecto del proyecto  
-- **DevGPT 5.1** — IA colaborativa / Co-autor del motor y CLI  
+
 
 > *“Hecho en Argentina, para el mundo. Pensado para que crear CRUDs sea tan rápido como escribir una idea.”*
+
+
+Qué le falta para ser "Pro"? (Ideas para el futuro) Si quieres llevarla al siguiente nivel, aquí tienes mi lista de deseos:
+
+Relaciones (Foreign Keys):
+Ahora generamos recursos aislados. Lo más difícil (y valioso) sería poder decir: crudfull generate resource Post title:str user_id:int:fk=User. Eso sería un game changer.
+Templates Personalizables:
+Que el usuario pueda tener una carpeta .crudfull/templates en su proyecto y que la librería use esos templates en lugar de los default. Así cada equipo adapta el estilo de código a sus normas.
+Autenticación:
+Un comando crudfull add auth que te genere un sistema básico de login/JWT.

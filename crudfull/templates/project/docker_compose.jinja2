@@ -1,0 +1,46 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    {% if db != 'ghost' %}
+    depends_on:
+      - db
+    {% endif %}
+    env_file:
+      - .env
+
+  {% if db == 'sql' %}
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-dbname}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  {% elif db == 'mongo' %}
+  db:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-secret}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+  {% endif %}
+
+volumes:
+  {% if db == 'sql' %}
+  postgres_data:
+  {% elif db == 'mongo' %}
+  mongo_data:
+  {% endif %}

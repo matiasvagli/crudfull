@@ -1,0 +1,45 @@
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
+{% if db == 'sql' %}
+from app.db.session import init_db
+{% elif db == 'mongo' %}
+from app.db.session import init_db
+{% endif %}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    {% if db != 'ghost' %}
+    await init_db()
+    {% endif %}
+    yield
+    # Shutdown
+    pass
+
+app = FastAPI(
+    title="{{ project_name }}",
+    lifespan=lifespan
+)
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    return """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>{{ project_name }}</title>
+            <style>
+                body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+                h1 { color: #333; }
+                a { color: #007bff; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+            </style>
+        </head>
+        <body>
+            <h1>🚀 Welcome to {{ project_name }} API</h1>
+            <p>Powered by <strong>CRUD-FULL</strong></p>
+            <p>Check the docs at <a href="/docs">/docs</a></p>
+        </body>
+    </html>
+    """

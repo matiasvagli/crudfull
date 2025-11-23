@@ -1,0 +1,30 @@
+from .models import {{ model_name }}
+from .schemas import {{ model_name }}Create, {{ model_name }}Update
+
+class {{ model_name }}Service:
+    async def list(self):
+        return await {{ model_name }}.find().to_list()
+
+    async def create(self, item: {{ model_name }}Create):
+        doc = {{ model_name }}(**item.dict())
+        await doc.insert()
+        return doc
+
+    async def read(self, id: str):
+        return await {{ model_name }}.get(id)
+
+    async def update(self, id: str, item: {{ model_name }}Update):
+        doc = await self.read(id)
+        if not doc:
+            return None
+        
+        await doc.set(item.dict(exclude_unset=True))
+        return doc
+
+    async def delete(self, id: str):
+        doc = await self.read(id)
+        if not doc:
+            return None
+        
+        await doc.delete()
+        return doc

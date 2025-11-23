@@ -1,0 +1,44 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from .models import {{ model_name }}
+from .schemas import {{ model_name }}Create, {{ model_name }}Update
+
+class {{ model_name }}Service:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def list(self):
+        result = await self.db.execute(select({{ model_name }}))
+        return result.scalars().all()
+
+    async def create(self, item: {{ model_name }}Create):
+        obj = {{ model_name }}(**item.dict())
+        self.db.add(obj)
+        await self.db.commit()
+        await self.db.refresh(obj)
+        return obj
+
+    async def read(self, id: int):
+        result = await self.db.execute(select({{ model_name }}).where({{ model_name }}.id == id))
+        return result.scalars().first()
+
+    async def update(self, id: int, item: {{ model_name }}Update):
+        obj = await self.read(id)
+        if not obj:
+            return None
+        
+        for key, value in item.dict(exclude_unset=True).items():
+            setattr(obj, key, value)
+        
+        await self.db.commit()
+        await self.db.refresh(obj)
+        return obj
+
+    async def delete(self, id: int):
+        obj = await self.read(id)
+        if not obj:
+            return None
+        
+        await self.db.delete(obj)
+        await self.db.commit()
+        return obj

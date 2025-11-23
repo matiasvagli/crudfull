@@ -1,4 +1,6 @@
-class {{ model_name }}ServiceGhost:
+from .schemas import {{ model_name }}Create, {{ model_name }}Update
+
+class {{ model_name }}Service:
     def __init__(self):
         self.items = []
         self.auto_id = 1
@@ -10,9 +12,9 @@ class {{ model_name }}ServiceGhost:
         for item in self.items:
             if item["id"] == item_id:
                 return item
-        return {"error": "Item not found"}    
+        return None
 
-    def create(self, item):
+    def create(self, item: {{ model_name }}Create):
         obj = item.dict()
         obj["id"] = self.auto_id
         self.auto_id += 1
@@ -20,17 +22,17 @@ class {{ model_name }}ServiceGhost:
         self.items.append(obj)
         return obj
 
-    def update(self, item_id: int, item):
+    def update(self, item_id: int, item: {{ model_name }}Update):
         for idx, existing in enumerate(self.items):
             if existing["id"] == item_id:
-                updated = {**existing, **item.dict()}
+                updated = {**existing, **item.dict(exclude_unset=True)}
                 self.items[idx] = updated
                 return updated
-        return {"error": "Item not found"}
+        return None
 
     def delete(self, item_id: int):
         for idx, existing in enumerate(self.items):
             if existing["id"] == item_id:
                 deleted = self.items.pop(idx)
                 return deleted
-        return {"error": "Item not found"}
+        return None

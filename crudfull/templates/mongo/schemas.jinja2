@@ -1,0 +1,25 @@
+from pydantic import BaseModel
+{% if has_optional %}from typing import Optional{% endif %}
+{% if has_datetime %}from datetime import datetime{% endif %}
+{% if has_uuid %}from uuid import UUID{% endif %}
+
+class {{ model_name }}Base(BaseModel):
+{% for field_name, field_data in fields.items() %}
+    {%- if field_data.optional %}
+    {{ field_name }}: Optional[{{ 'UUID' if field_data.type == 'uuid' else field_data.type }}] = None
+    {%- else %}
+    {{ field_name }}: {{ 'UUID' if field_data.type == 'uuid' else field_data.type }}
+    {%- endif %}
+{% endfor %}
+
+class {{ model_name }}Create({{ model_name }}Base):
+    pass
+
+class {{ model_name }}Update({{ model_name }}Base):
+    pass
+
+class {{ model_name }}Response({{ model_name }}Base):
+    id: Optional[str] = None # Mongo ID
+
+    class Config:
+        from_attributes = True

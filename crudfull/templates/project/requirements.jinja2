@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+{% if db == 'sql' %}
+sqlalchemy
+asyncpg
+{% elif db == 'mongo' %}
+beanie
+motor
+{% endif %}
+{% if db != 'ghost' %}
+python-dotenv
+{% endif %}
+pytest
+pytest-asyncio
+httpx

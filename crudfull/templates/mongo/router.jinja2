@@ -9,29 +9,29 @@ service = {{ model_name }}Service()
 
 @router.get("/", response_model=List[{{ model_name }}Response])
 async def list_{{ resource }}():
-    return service.list()
+    return await service.list()
 
 @router.get("/{id}", response_model={{ model_name }}Response)
-async def read_{{ singular }}(id: int):
-    item = service.get(id)
+async def read_{{ singular }}(id: str):
+    item = await service.read(id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
 
 @router.post("/", response_model={{ model_name }}Response)
 async def create_{{ singular }}(item: {{ model_name }}Create):
-    return service.create(item)
+    return await service.create(item)
 
 @router.patch("/{id}", response_model={{ model_name }}Response)
-async def update_{{ singular }}(id: int, item: {{ model_name }}Update):
-    updated = service.update(id, item)
+async def update_{{ singular }}(id: str, item: {{ model_name }}Update):
+    updated = await service.update(id, item)
     if not updated:
         raise HTTPException(status_code=404, detail="Item not found")
     return updated
 
 @router.delete("/{id}", response_model={{ model_name }}Response)
-async def delete_{{ singular }}(id: int):
-    deleted = service.delete(id)
+async def delete_{{ singular }}(id: str):
+    deleted = await service.delete(id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Item not found")
     return deleted
