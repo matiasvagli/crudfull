@@ -206,6 +206,15 @@ def new_project(
         env_content = render_template("project/env.jinja2", context)
         write_file(name, ".env", env_content)
 
+    # 6. Copy static assets (logos, CSS, etc.)
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    static_source = os.path.join(templates_dir, "project", "static")
+    if os.path.exists(static_source):
+        import shutil
+        static_dest = os.path.join(name, "static")
+        shutil.copytree(static_source, static_dest)
+        typer.echo(f"📁 Static assets copied to {static_dest}/")
+
     typer.echo(f"\n🚀 Proyecto {name} creado exitosamente!")
     typer.echo(f"📂 cd {name}")
     if docker:

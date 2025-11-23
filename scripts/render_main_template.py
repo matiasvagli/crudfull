@@ -15,6 +15,7 @@ from jinja2 import Environment, FileSystemLoader
 parser = argparse.ArgumentParser()
 parser.add_argument("--db", choices=["sql", "mongo", "ghost"], default="sql")
 parser.add_argument("--name", default="MiProyecto")
+parser.add_argument("--logo-url", default=None, help="URL or path to a project logo to include in the preview")
 args = parser.parse_args()
 
 # locate templates folder relative to repo
@@ -24,7 +25,7 @@ project_tpl_dir = os.path.join(base_dir, "project")
 env = Environment(loader=FileSystemLoader(project_tpl_dir))
 template = env.get_template("main.jinja2")
 
-html = template.render(project_name=args.name, db=args.db)
+html = template.render(project_name=args.name, db=args.db, logo_url=args.logo_url)
 
 out_path = os.path.join(os.getcwd(), "tmp_main.html")
 with open(out_path, "w") as f:
