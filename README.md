@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./logo_enhanced.png" alt="CRUDFULL Logo" style="width: 850px; height: 350px;"/>
+</div>
+
 # ⚡️ CRUDFULL — FastAPI Project Generator
 
 **CRUDFULL** te permite crear APIs REST completas en segundos, con arquitectura modular y soporte para múltiples bases de datos.
@@ -9,6 +13,7 @@
 - 🔄 **Auto-registro de routers** - Los endpoints se registran automáticamente en `main.py`
 - 🗄️ **Multi-DB** - Soporte para SQL (PostgreSQL), MongoDB y Ghost (in-memory)
 - 🐳 **Docker ready** - Genera `docker-compose.yml` y `Dockerfile` opcionales
+- 🐳 **Docker dev** - Genera `docker-compose.dev.yml` para desarrollo rapido
 - 🔐 **Autenticación JWT** - Sistema de auth completo con un comando
 - 🧪 **Tests incluidos** - Tests automáticos para cada recurso
 - 📚 **Documentación automática** - FastAPI Swagger UI out-of-the-box
@@ -445,167 +450,13 @@ MIT
 
 ---
 
-**Hecho con ❤️ por Matias Vagliviello**
 
-```bash
-mkdir crudfull_test
-cd crudfull_test
----
-
-## ⚙️ Uso del CLI
-
-### 📍 Ver versión
-
-```bash
-crudfull version
-```
-
----
-
-## 🧱 Generar un recurso completo
-
-```bash
-crudfull generate resource <Nombre> <campos...> --db <motor>
-```
-
-Ejemplo de campos:  
-`name:str age:int active:bool`
-
-Motores disponibles:  
-- `ghost` (default)
-- `sql`
-- `mongo`
-
----
-
-### 👻 Modo GHOST (sin base de datos)
-
-```bash
-crudfull generate resource User name:str age:int --db ghost
-```
-
-Genera:
-- `models/user.py`
-- `services/user_service_ghost.py`
-- `routers/user_router.py`
-
-Perfecto para prototipos, pruebas y demos rápidas.
-
----
-
-### 🟦 Modo SQL (SQLAlchemy Async)
-
-```bash
-crudfull generate resource Product title:str price:int --db sql
-```
-
-Genera:
-- `models/product.py` (Pydantic)
-- `models/product_sql.py` (SQLAlchemy)
-- `services/product_service_sql.py`
-- `routers/product_router.py`
-- `database_examples/database_sql_example.py`
-
-Listo para usar en FastAPI:
-
-```python
-from database_examples.database_sql_example import get_db
-```
-
-**Creación de tablas:**
-Se genera un script automático en `scripts/create_tables.py`. Ejecútalo para inicializar la DB:
-
-```bash
-python scripts/create_tables.py
-```
-
-**Tests automáticos:**
-Se generan tests en `tests/`. Para correrlos:
-
-```bash
-pytest
-```
-
----
-
-### 🟩 Modo Mongo (Beanie ODM)
-
-```bash
-crudfull generate resource Order amount:int code:str --db mongo
-```
-
-Genera:
-- `models/order.py`
-- `models/order_mongo.py`
-- `services/order_service_mongo.py`
-- `routers/order_router.py`
-- `database_examples/database_mongo_example.py`
-
-Inicializa con:
-
-```python
-from database_examples.database_mongo_example import init_db
-```
-
----
-
-## 📁 Estructura generada
-
-```
-models/
-services/
-routers/
-database_examples/
-```
-
-Backend modular, limpio y escalable.
-
----
-
-## 🧙‍♂️ Arquitectura de Templates
-
-```
-crudfull/
-  templates/
-    ghost/
-    sql/
-    mongo/
-```
-
----
-
-## 🛠️ Roadmap futuro
-
-- ✅ 🧪 Generación automática de tests (pytest + httpx)
-- � **Autenticación**: Comando `crudfull add auth` (Login, JWT, Users).
-- 🔗 **Relaciones**: Soporte para Foreign Keys (ej: `user_id:int:fk=User`).
-- 🎨 **Templates Personalizables**: Usar plantillas propias desde `.crudfull/templates`.
-- �📦 Comando para generar un proyecto FastAPI completo (`crudfull new project`)
-- 🗄️ Compatibilidad con más ORMs (Tortoise ORM, Prisma, SQLModel)
-- ⚙️ Parámetros avanzados: soft deletes, timestamps, UUIDs.
-- 🚀 Publicación oficial en PyPI
-- 📘 Documentación completa con MkDocs + GH Pages
-- 🛡️ Validaciones avanzadas, manejo de errores y respuestas estándar
-- 🔌 Integración con OpenAPI/Swagger extendida
-- 🧰 Generación de CLI para testear CRUDs automáticamente
-
----
-
-## 👨‍💻 Autores
 
 **CRUDfull** fue creado con pasión y café por:
 
-- **Matías Vagliviello** — Desarrollador & Arquitecto del proyecto  
+**Matías Vagliviello** — Desarrollador & Arquitecto del proyecto  
 
 
 > *“Hecho en Argentina, para el mundo. Pensado para que crear CRUDs sea tan rápido como escribir una idea.”*
 
 
-Qué le falta para ser "Pro"? (Ideas para el futuro) Si quieres llevarla al siguiente nivel, aquí tienes mi lista de deseos:
-
-Relaciones (Foreign Keys):
-Ahora generamos recursos aislados. Lo más difícil (y valioso) sería poder decir: crudfull generate resource Post title:str user_id:int:fk=User. Eso sería un game changer.
-Templates Personalizables:
-Que el usuario pueda tener una carpeta .crudfull/templates en su proyecto y que la librería use esos templates en lugar de los default. Así cada equipo adapta el estilo de código a sus normas.
-Autenticación:
-Un comando crudfull add auth que te genere un sistema básico de login/JWT.
