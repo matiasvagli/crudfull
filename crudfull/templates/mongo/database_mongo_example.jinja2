@@ -1,4 +1,4 @@
-{# Ejemplo de conexión Beanie + Motor (dual-mode: usa env vars con defaults) #}
+{# Example of Beanie + Motor connection (dual-mode: uses env vars with defaults) #}
 
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -10,7 +10,7 @@ from models.{{ model_file }} import {{ model_name }}Document
 
 
 async def init_db():
-    # Leer configuración desde variables de entorno (si existen) o usar valores por defecto.
+    # Read configuration from environment variables (if present) or use default values.
     mongo_host = os.getenv("MONGO_HOST", "localhost")
     mongo_port = os.getenv("MONGO_PORT", "27017")
     mongo_db = os.getenv("MONGO_DATABASE", "mydb")

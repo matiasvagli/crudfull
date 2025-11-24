@@ -6,15 +6,16 @@ import os
 import sys
 import asyncio
 
+
 # Add project root to sys.path so we can import main
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from main import app
 
-# Import your models here. 
-# Since we don't know all models, we assume the user will add them or we import the specific one being tested if we can.
-# But for a generic conftest, we might need to be clever.
-# For now, let's import the specific model this conftest is generated for, or assume a 'models' package.
+ # Import your models here.
+ # Since we don't know all models, we assume the user will add them or we import the specific one being tested if we can.
+ # For a generic conftest, we might need to be clever.
+ # For now, let's import the specific model this conftest is generated for, or assume a 'models' package.
 from models.{{ model_file }} import {{ model_name }}Document
 
 @pytest.fixture(scope="session")

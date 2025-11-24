@@ -4,46 +4,54 @@ from jinja2 import Environment, FileSystemLoader
 import os
 import inflect
 
+ # Colored terminal helpers
+def success(msg: str):
+    typer.echo(f"\033[1;32m{msg}\033[0m")
+
+def warning(msg: str):
+    typer.echo(f"\033[1;33m{msg}\033[0m")
+
+def error(msg: str):
+    typer.echo(f"\033[1;31m{msg}\033[0m")
+
 
 # ===========================
 # LOGO
 # ===========================
 def show_logo():
-    logo = r"""
-        🚀   CRUD-FULL — 
-        Modes: ghost | sql | mongo
-"""
+    logo = "CRUD-FULL — Modes: ghost | sql | mongo"
     typer.echo(logo)
 
 
 # ===========================
 # APP ROOT
 # ===========================
+
 app = typer.Typer(
-    help="crudfull - generador de CRUDs para FastAPI",
+    help="crudfull - CRUD generator for FastAPI",
     no_args_is_help=True,
 )
 
-generate_app = typer.Typer(help="Generar recursos CRUD")
+generate_app = typer.Typer(help="Generate CRUD resources")
 app.add_typer(generate_app, name="generate")
 
-add_app = typer.Typer(help="Agregar funcionalidades al proyecto")
+add_app = typer.Typer(help="Add features to the project")
 app.add_typer(add_app, name="add")
 
-version_app = typer.Typer(help="Ver versión de crudfull")
+version_app = typer.Typer(help="Show crudfull version")
 app.add_typer(version_app, name="version")
 
-sync_app = typer.Typer(help="Sincronizar routers en main.py")
+sync_app = typer.Typer(help="Sync routers in main.py")
 app.add_typer(sync_app, name="sync-routers")
 
 
 
 # ===========================
-# CALLBACK PARA MOSTRAR LOGO
+# CALLBACK TO SHOW LOGO
 # ===========================
 @app.callback()
 def main_callback():
-    """Muestra el logo al inicio de cualquier comando."""
+    """Show the logo at the start of any command."""
     show_logo()
 
 
@@ -58,7 +66,7 @@ def write_file(folder: str, file_name: str, content: str):
     with open(file_path, "w") as f:
         f.write(content)
 
-    typer.echo(f"📝 Archivo generado: {file_path}")
+    success(f"File generated: {file_path}")
 
 
 def render_template(path: str, context: dict) -> str:
@@ -133,14 +141,14 @@ def add_router_to_main(router_name: str, module_path: str):
     with open(main_path, "w") as f:
         f.write("\n".join(lines))
     
-    typer.echo(f"✅ Router '{router_name}' registrado automáticamente en main.py")
+    success(f"Router '{router_name}' auto-registered in main.py")
 
 
 # ---------------------------
-# Helpers Docker-compose (.dev) non-invasive
+# Docker-compose helpers (.dev) non-invasive
 # ---------------------------
 def ensure_env_file(env_path: str, vars: dict):
-    """Crea o actualiza .env añadiendo variables que falten (no sobrescribe las existentes)."""
+    """Create or update .env, adding missing variables (does not overwrite existing ones)."""
     if os.path.exists(env_path):
         with open(env_path, "r") as f:
             content = f.read()
@@ -151,26 +159,26 @@ def ensure_env_file(env_path: str, vars: dict):
                     f.write(f"{k}={v}\n")
                     appended = True
         if appended:
-            typer.echo(f"🔧 Actualizadas variables en {env_path}")
+            warning(f"Updated variables in {env_path}")
         else:
-            typer.echo(f"ℹ️  {env_path} ya contenía las variables necesarias")
+            warning(f"{env_path} already contained all required variables")
     else:
         with open(env_path, "w") as f:
             for k, v in vars.items():
                 f.write(f"{k}={v}\n")
-        typer.echo(f"🆕 {env_path} creado")
+        success(f"{env_path} created")
 
 
 def ensure_compose_has_service(compose_path: str, service_key: str, service_block: str, volumes: list[str]):
-    """Añade un bloque de servicio al compose (no invasivo). Si el servicio existe, no hace nada.
-    Si no existe compose, lo crea con versión 3.8 y el servicio.
+    """Add a service block to compose (non-invasive). If the service exists, do nothing.
+    If compose does not exist, create it with version 3.8 and the service.
     """
     if os.path.exists(compose_path):
         with open(compose_path, "r") as f:
             content = f.read()
 
         if service_key in content:
-            typer.echo(f"ℹ️  El servicio '{service_key}' ya existe en {compose_path}")
+            warning(f"Service '{service_key}' already exists in {compose_path}")
             # asegurar volúmenes
             for v in volumes:
                 if v not in content:
@@ -198,7 +206,7 @@ def ensure_compose_has_service(compose_path: str, service_key: str, service_bloc
         with open(compose_path, "w") as f:
             f.write(new_content)
 
-        typer.echo(f"✅ Servicio '{service_key}' añadido a {compose_path}")
+        success(f"Service '{service_key}' added to {compose_path}")
     else:
         # crear nuevo compose con el servicio
         base = "version: '3.8'\nservices:\n"
@@ -207,7 +215,7 @@ def ensure_compose_has_service(compose_path: str, service_key: str, service_bloc
             content += f"  {v}:\n"
         with open(compose_path, "w") as f:
             f.write(content)
-        typer.echo(f"🆕 {compose_path} creado con el servicio '{service_key}'")
+        success(f"{compose_path} created with service '{service_key}'")
 
 
 # ===========================
