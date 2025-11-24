@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 {% if has_optional %}from typing import Optional{% endif %}
 {% if has_datetime %}from datetime import datetime{% endif %}
 {% if has_uuid %}from uuid import UUID{% endif %}
@@ -20,6 +20,4 @@ class {{ model_name }}Update({{ model_name }}Base):
 
 class {{ model_name }}Response({{ model_name }}Base):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

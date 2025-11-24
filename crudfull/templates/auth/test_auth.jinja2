@@ -1,0 +1,52 @@
+import pytest
+from app.auth.schemas import UserCreate
+
+def test_register_user(client):
+    response = client.post("/auth/register", json={
+        "email": "test@example.com",
+        "password": "password123",
+        "name": "Test User"
+    })
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == "test@example.com"
+    assert "id" in data
+
+def test_login_user(client):
+    # First register
+    client.post("/auth/register", json={
+        "email": "login@example.com",
+        "password": "password123",
+        "name": "Login User"
+    })
+    
+    # Then login
+    response = client.post("/auth/login", json={
+        "email": "login@example.com",
+        "password": "password123"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+def test_read_users_me(client):
+    # Register and login
+    client.post("/auth/register", json={
+        "email": "me@example.com",
+        "password": "password123",
+        "name": "Me User"
+    })
+    login_res = client.post("/auth/login", json={
+        "email": "me@example.com",
+        "password": "password123"
+    })
+    token = login_res.json()["access_token"]
+    
+    # Get me
+    response = client.get("/auth/me", headers={
+        "Authorization": f"Bearer {token}"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "me@example.com"

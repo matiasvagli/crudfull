@@ -1,39 +1,9 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-import os
-from contextlib import asynccontextmanager
-
-from app.db.session import init_db
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    
-    await init_db()
-    
-    yield
-    # Shutdown
-    pass
-
-app = FastAPI(
-    title="test_debug",
-    lifespan=lifespan
-)
-
-# Mount static files (logos, CSS, etc.)
-if os.path.exists("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    return """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>test_debug — API</title>
+    <title>{{ project_name }} — API</title>
     <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -112,12 +82,6 @@ async def root():
             padding-top: 20px;
             border-top: 1px solid #e2e8f0;
         }
-        .code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
         @media (max-width: 640px) {
             .header { flex-direction: column; text-align: center; }
             .card { padding: 24px; }
@@ -130,10 +94,10 @@ async def root():
             <img src="/static/logo.svg" alt="Logo" class="logo">
             <img src="https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png" alt="FastAPI" class="logo">
             <div>
-                <h1>🚀 test_debug — API</h1>
+                <h1>🚀 {{ project_name }} — API</h1>
                 <p class="subtitle">
                     Generado con <strong>CRUD-FULL</strong>. 
-                    Motor: <span class="badge">SQL</span>
+                    Motor: <span class="badge">{% if db == 'sql' %}PostgreSQL{% elif db == 'mongo' %}MongoDB{% else %}Ghost (In-Memory){% endif %}</span>
                 </p>
             </div>
         </div>
@@ -144,9 +108,9 @@ async def root():
         </div>
         
         <div class="footer">
-            <p>Reemplaza el logo en <span class="code">static/logo.svg</span></p>
-            <p>Revisa el código en <span class="code">models/</span>, <span class="code">routers/</span> y <span class="code">services/</span></p>
+            <p>Version Beta</p>
+            <p>FastAPI + CRUDfull — Tomá un café, ya está lista tu app ☕</p>
         </div>
     </div>
 </body>
-</html>"""
+</html>

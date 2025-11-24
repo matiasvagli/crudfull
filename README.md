@@ -192,6 +192,21 @@ async def create_product(
 - `POST /auth/login` - Login y obtener token JWT
 - `GET /auth/me` - Obtener info del usuario actual (requiere token)
 
+### Tests de autenticación
+
+El comando `crudfull add auth` genera automáticamente tests para los endpoints de autenticación en `tests/auth/test_auth.py`:
+
+```python
+def test_register_user(client):
+    # Test de registro
+    
+def test_login_user(client):
+    # Test de login
+    
+def test_read_users_me(client):
+    # Test de obtener usuario actual
+```
+
 ---
 
 ## 📚 Comandos CLI
@@ -355,8 +370,15 @@ Esto permite que `crudfull generate resource` detecte automáticamente la base d
 Los tests se generan automáticamente para cada recurso con los tipos de datos correctos:
 
 ```bash
+# Opción 1: Ejecutar desde el directorio del proyecto
+pytest
+
+# Opción 2: Si tienes problemas con imports, usa PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 pytest
 ```
+
+> **💡 Tip:** Si ves errores de `ModuleNotFoundError`, asegurate de ejecutar pytest con `PYTHONPATH` configurado o desde el directorio raíz del proyecto.
 
 ### Tests automáticos
 

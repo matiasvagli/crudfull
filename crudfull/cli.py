@@ -71,6 +71,71 @@ def render_template(path: str, context: dict) -> str:
     return template.render(context)
 
 
+def add_router_to_main(router_name: str, module_path: str):
+    """
+    Add a router import and include to main.py, keeping imports grouped together.
+    
+    Args:
+        router_name: Name of the router (e.g., 'auth', 'products')
+        module_path: Import path (e.g., 'app.auth.router', 'app.products.router')
+    """
+    main_path = os.path.join("app", "main.py")
+    if not os.path.exists(main_path):
+        return
+    
+    with open(main_path, "r") as f:
+        content = f.read()
+    
+    import_line = f"from {module_path} import router as {router_name}_router"
+    include_line = f"app.include_router({router_name}_router)"
+    
+    # Skip if already present
+    if import_line in content and include_line in content:
+        return
+    
+    lines = content.split("\n")
+    
+    # Add import if not present
+    if import_line not in content:
+        # Find the last router import or last import from app.*
+        last_router_import_idx = -1
+        last_app_import_idx = -1
+        last_import_idx = -1
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped.startswith("from app.") and "import router as" in stripped:
+                last_router_import_idx = i
+            elif stripped.startswith("from app."):
+                last_app_import_idx = i
+            elif stripped.startswith(("from ", "import ")):
+                last_import_idx = i
+        
+        # Insert after last router import, or after last app import, or after last import
+        insert_idx = last_router_import_idx + 1 if last_router_import_idx >= 0 else \
+                     last_app_import_idx + 1 if last_app_import_idx >= 0 else \
+                     last_import_idx + 1
+        
+        lines.insert(insert_idx, import_line)
+    
+    # Add include_router if not present
+    if include_line not in content:
+        # Find where to insert (after app = FastAPI(...))
+        for i, line in enumerate(lines):
+            if "app = FastAPI" in line:
+                # Find the closing parenthesis
+                j = i
+                while j < len(lines) and ")" not in lines[j]:
+                    j += 1
+                lines.insert(j + 1, f"\n{include_line}")
+                break
+    
+    with open(main_path, "w") as f:
+        f.write("\n".join(lines))
+    
+    typer.echo(f"✅ Router '{router_name}' registrado automáticamente en main.py")
+
+
 # ---------------------------
 # Helpers Docker-compose (.dev) non-invasive
 # ---------------------------
@@ -205,44 +270,16 @@ def add_auth(
     security_content = render_template("auth/security.jinja2", context)
     write_file(core_dir, "security.py", security_content)
     
+    # Generate Auth Tests
+    test_auth_dir = os.path.join("tests", "auth")
+    os.makedirs(test_auth_dir, exist_ok=True)
+    write_file(test_auth_dir, "__init__.py", "")
+    
+    test_auth_content = render_template("auth/test_auth.jinja2", context)
+    write_file(test_auth_dir, "test_auth.py", test_auth_content)
+    
     # Auto-register router in main.py
-    main_path = os.path.join("app", "main.py")
-    if os.path.exists(main_path):
-        with open(main_path, "r") as f:
-            main_content = f.read()
-        
-        import_line = "from app.auth.router import router as auth_router"
-        include_line = "app.include_router(auth_router)"
-        
-        # Add import if not present
-        if import_line not in main_content:
-            # Find the last import line
-            lines = main_content.split("\n")
-            import_idx = 0
-            for i, line in enumerate(lines):
-                if line.startswith("from ") or line.startswith("import "):
-                    import_idx = i + 1
-            lines.insert(import_idx, import_line)
-            main_content = "\n".join(lines)
-        
-        # Add include_router if not present
-        if include_line not in main_content:
-            # Find where to insert (after app = FastAPI(...))
-            lines = main_content.split("\n")
-            for i, line in enumerate(lines):
-                if "app = FastAPI" in line:
-                    # Find the closing parenthesis
-                    j = i
-                    while j < len(lines) and ")" not in lines[j]:
-                        j += 1
-                    lines.insert(j + 1, f"\n{include_line}")
-                    break
-            main_content = "\n".join(lines)
-        
-        with open(main_path, "w") as f:
-            f.write(main_content)
-        
-        typer.echo(f"✅ Router 'auth' registrado automáticamente en main.py")
+    add_router_to_main("auth", "app.auth.router")
 
     typer.echo("\n✅ Módulo de autenticación generado exitosamente!")
     typer.echo(f"📂 app/auth/ - Módulo de autenticación")
@@ -293,6 +330,10 @@ def new_project(
     main_content = render_template("project/main.jinja2", context)
     write_file(os.path.join(name, "app"), "main.py", main_content)
     write_file(os.path.join(name, "app"), "__init__.py", "")
+    
+    # 1.1 welcome.html
+    welcome_content = render_template("project/welcome.html.jinja2", context)
+    write_file(os.path.join(name, "app"), "welcome.html", welcome_content)
 
     # 2. Database setup
     if db == "sql":
@@ -316,6 +357,10 @@ def new_project(
     # 4. Gitignore
     git_content = render_template("project/gitignore.jinja2", context)
     write_file(name, ".gitignore", git_content)
+
+    # 4.1 Pytest config
+    pytest_content = render_template("project/pytest.jinja2", context)
+    write_file(name, "pytest.ini", pytest_content)
 
     # 5. Docker files (optional)
     if docker:
@@ -501,43 +546,7 @@ def generate_resource(
     write_file(os.path.join("tests", resource), f"test_{resource}.py", test_content)
 
     # Auto-register router in main.py
-    main_path = os.path.join("app", "main.py")
-    if os.path.exists(main_path):
-        with open(main_path, "r") as f:
-            main_content = f.read()
-        
-        import_line = f"from app.{resource}.router import router as {resource}_router"
-        include_line = f"app.include_router({resource}_router)"
-        
-        # Add import if not present
-        if import_line not in main_content:
-            # Find the last import line
-            lines = main_content.split("\n")
-            import_idx = 0
-            for i, line in enumerate(lines):
-                if line.startswith("from ") or line.startswith("import "):
-                    import_idx = i + 1
-            lines.insert(import_idx, import_line)
-            main_content = "\n".join(lines)
-        
-        # Add include_router if not present
-        if include_line not in main_content:
-            # Find where to insert (after app = FastAPI(...))
-            lines = main_content.split("\n")
-            for i, line in enumerate(lines):
-                if "app = FastAPI" in line:
-                    # Find the closing parenthesis
-                    j = i
-                    while j < len(lines) and ")" not in lines[j]:
-                        j += 1
-                    lines.insert(j + 1, f"\n{include_line}")
-                    break
-            main_content = "\n".join(lines)
-        
-        with open(main_path, "w") as f:
-            f.write(main_content)
-        
-        typer.echo(f"✅ Router '{resource}' registrado automáticamente en main.py")
+    add_router_to_main(resource, f"app.{resource}.router")
 
     typer.echo(f"\n🎉 Recurso '{name}' generado exitosamente!")
     typer.echo(f"📂 app/{resource}/ - Módulo completo")

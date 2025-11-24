@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+recursive-include crudfull/templates *.jinja2
+recursive-include crudfull/templates/project/static *

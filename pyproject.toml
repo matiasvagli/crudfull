@@ -4,12 +4,27 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crudfull"
-version = "0.1.0"
-description = "Generador de CRUDs para FastAPI (work in progress)"
+version = "0.1.0-beta.1"
+description = "Generador de CRUDs para FastAPI - Crea APIs REST completas en segundos"
 readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
 authors = [
   { name = "Matias Vagliviello", email = "vaglimatias@gmail.com" }
+]
+keywords = ["fastapi", "crud", "generator", "api", "rest", "scaffolding"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: FastAPI",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
     "typer",
@@ -26,6 +41,12 @@ dependencies = [
     "bcrypt==4.0.1",
     "passlib[bcrypt]==1.7.4"
 ]
+
+[project.urls]
+Homepage = "https://github.com/matiasvagli/crudfull"
+Repository = "https://github.com/matiasvagli/crudfull"
+Issues = "https://github.com/matiasvagli/crudfull/issues"
+Changelog = "https://github.com/matiasvagli/crudfull/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 lite = [
@@ -51,3 +72,9 @@ crudfull = "crudfull.cli:app"
 
 [tool.setuptools.packages.find]
 include = ["crudfull*"]
+
+[tool.setuptools.package-data]
+crudfull = [
+    "templates/**/*.jinja2",
+    "templates/project/static/**/*"
+]
