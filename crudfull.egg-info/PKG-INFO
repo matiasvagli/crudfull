@@ -1,10 +1,28 @@
 Metadata-Version: 2.4
 Name: crudfull
-Version: 0.1.0
-Summary: Generador de CRUDs para FastAPI (work in progress)
+Version: 0.1.0b1
+Summary: Generador de CRUDs para FastAPI - Crea APIs REST completas en segundos
 Author-email: Matias Vagliviello <vaglimatias@gmail.com>
+License: MIT
+Project-URL: Homepage, https://github.com/matiasvagli/crudfull
+Project-URL: Repository, https://github.com/matiasvagli/crudfull
+Project-URL: Issues, https://github.com/matiasvagli/crudfull/issues
+Project-URL: Changelog, https://github.com/matiasvagli/crudfull/blob/main/CHANGELOG.md
+Keywords: fastapi,crud,generator,api,rest,scaffolding
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Code Generators
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Framework :: FastAPI
+Classifier: Operating System :: OS Independent
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: typer
 Requires-Dist: jinja2
 Requires-Dist: inflect
@@ -31,6 +49,7 @@ Requires-Dist: python-jose[cryptography]; extra == "auth"
 Requires-Dist: passlib[bcrypt]; extra == "auth"
 Requires-Dist: python-multipart; extra == "auth"
 Requires-Dist: pydantic[email]; extra == "auth"
+Dynamic: license-file
 
 <div align="center">
   <img src="./logo_enhanced.png" alt="CRUDFULL Logo" style="width: 850px; height: 350px;"/>
@@ -187,6 +206,25 @@ pip install crudfull[auth]
 ```
 
 ### Proteger rutas
+Puedes proteger rutas manualmente o usando el CLI:
+
+**Opción 1: Usando CLI (Recomendado)**
+
+```bash
+# Proteger una acción específica (list, create, read, update, delete)
+crudfull protect "recurso" "metodo"
+crudfull protect products create
+
+# Proteger todas las rutas del recurso
+crudfull protect "recurso" "all"
+crudfull protect products all
+
+# Proteger una función específica por su nombre
+crudfull protect "recurso" "funcion"
+crudfull protect products --func upload_file
+```
+
+**Opción 2: Manualmente**
 
 ```python
 from fastapi import Depends
@@ -206,6 +244,21 @@ async def create_product(
 - `POST /auth/register` - Registrar nuevo usuario
 - `POST /auth/login` - Login y obtener token JWT
 - `GET /auth/me` - Obtener info del usuario actual (requiere token)
+
+### Tests de autenticación
+
+El comando `crudfull add auth` genera automáticamente tests para los endpoints de autenticación en `tests/auth/test_auth.py`:
+
+```python
+def test_register_user(client):
+    # Test de registro
+    
+def test_login_user(client):
+    # Test de login
+    
+def test_read_users_me(client):
+    # Test de obtener usuario actual
+```
 
 ---
 
@@ -249,6 +302,13 @@ Agrega autenticación JWT al proyecto
 
 ```bash
 crudfull add auth [--type jwt]
+```
+
+### `crudfull protect`
+Protege rutas de un recurso con autenticación
+
+```bash
+crudfull protect <resource> <action|all> [--func <nombre>]
 ```
 
 ### `crudfull sync-routers run`
@@ -363,8 +423,15 @@ Esto permite que `crudfull generate resource` detecte automáticamente la base d
 Los tests se generan automáticamente para cada recurso con los tipos de datos correctos:
 
 ```bash
+# Opción 1: Ejecutar desde el directorio del proyecto
+pytest
+
+# Opción 2: Si tienes problemas con imports, usa PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 pytest
 ```
+
+> **💡 Tip:** Si ves errores de `ModuleNotFoundError`, asegurate de ejecutar pytest con `PYTHONPATH` configurado o desde el directorio raíz del proyecto.
 
 ### Tests automáticos
 

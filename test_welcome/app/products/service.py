@@ -1,33 +1,33 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from .models import {{ model_name }}
-from .schemas import {{ model_name }}Create, {{ model_name }}Update
+from .models import Product
+from .schemas import ProductCreate, ProductUpdate
 
-class {{ model_name }}Service:
+class ProductService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def list(self):
-        result = await self.db.execute(select({{ model_name }}))
+        result = await self.db.execute(select(Product))
         return result.scalars().all()
 
-    async def create(self, item: {{ model_name }}Create):
-        obj = {{ model_name }}(**item.model_dump())
+    async def create(self, item: ProductCreate):
+        obj = Product(**item.dict())
         self.db.add(obj)
         await self.db.commit()
         await self.db.refresh(obj)
         return obj
 
     async def read(self, id: int):
-        result = await self.db.execute(select({{ model_name }}).where({{ model_name }}.id == id))
+        result = await self.db.execute(select(Product).where(Product.id == id))
         return result.scalars().first()
 
-    async def update(self, id: int, item: {{ model_name }}Update):
+    async def update(self, id: int, item: ProductUpdate):
         obj = await self.read(id)
         if not obj:
             return None
         
-        for key, value in item.model_dump(exclude_unset=True).items():
+        for key, value in item.dict(exclude_unset=True).items():
             setattr(obj, key, value)
         
         await self.db.commit()

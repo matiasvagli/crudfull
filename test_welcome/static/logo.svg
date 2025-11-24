@@ -1,0 +1,15 @@
+<svg width="512" height="160" viewBox="0 0 512 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">CRUDfull Logo</title>
+  <desc id="desc">Logo tipográfico simple con la palabra CRUDfull</desc>
+
+  <!-- Fondo transparente -->
+  <rect width="512" height="160" fill="none"></rect>
+
+  <!-- Texto principal -->
+  <text x="50%" y="55%" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="700" fill="#0B3C7D">
+    CRUD<tspan fill="#00AEEF">full</tspan>
+  </text>
+
+  <!-- Subrayado simple -->
+  <rect x="120" y="105" width="272" height="4" rx="2" fill="#00AEEF"></rect>
+</svg>

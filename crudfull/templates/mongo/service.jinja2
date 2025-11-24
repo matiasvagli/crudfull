@@ -6,7 +6,7 @@ class {{ model_name }}Service:
         return await {{ model_name }}.find().to_list()
 
     async def create(self, item: {{ model_name }}Create):
-        doc = {{ model_name }}(**item.dict())
+        doc = {{ model_name }}(**item.model_dump())
         await doc.insert()
         return doc
 
@@ -18,7 +18,7 @@ class {{ model_name }}Service:
         if not doc:
             return None
         
-        await doc.set(item.dict(exclude_unset=True))
+        await doc.set(item.model_dump(exclude_unset=True))
         return doc
 
     async def delete(self, id: str):

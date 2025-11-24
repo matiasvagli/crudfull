@@ -15,7 +15,7 @@ class {{ model_name }}Service:
         return None
 
     def create(self, item: {{ model_name }}Create):
-        obj = item.dict()
+        obj = item.model_dump()
         obj["id"] = self.auto_id
         self.auto_id += 1
 
@@ -25,7 +25,7 @@ class {{ model_name }}Service:
     def update(self, item_id: int, item: {{ model_name }}Update):
         for idx, existing in enumerate(self.items):
             if existing["id"] == item_id:
-                updated = {**existing, **item.dict(exclude_unset=True)}
+                updated = {**existing, **item.model_dump(exclude_unset=True)}
                 self.items[idx] = updated
                 return updated
         return None
