@@ -22,7 +22,9 @@ dependencies = [
     "sqlalchemy",
     "asyncpg",
     "beanie",
-    "motor"
+    "motor",
+    "bcrypt==4.0.1",
+    "passlib[bcrypt]==1.7.4"
 ]
 
 [project.optional-dependencies]
@@ -39,7 +41,8 @@ test = [
 auth = [
     "python-jose[cryptography]",
     "passlib[bcrypt]",
-    "python-multipart"
+    "python-multipart",
+    "pydantic[email]"
 ]
 
 

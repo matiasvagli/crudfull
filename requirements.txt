@@ -1,0 +1,13 @@
+typer
+jinja2
+inflect
+pydantic>2.12.0
+python-dotenv
+fastapi
+uvicorn[standard]
+sqlalchemy
+asyncpg
+beanie
+motor
+bcrypt==4.0.1
+passlib[bcrypt]==1.7.4

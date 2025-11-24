@@ -205,15 +205,51 @@ def add_auth(
     security_content = render_template("auth/security.jinja2", context)
     write_file(core_dir, "security.py", security_content)
     
+    # Auto-register router in main.py
+    main_path = os.path.join("app", "main.py")
+    if os.path.exists(main_path):
+        with open(main_path, "r") as f:
+            main_content = f.read()
+        
+        import_line = "from app.auth.router import router as auth_router"
+        include_line = "app.include_router(auth_router)"
+        
+        # Add import if not present
+        if import_line not in main_content:
+            # Find the last import line
+            lines = main_content.split("\n")
+            import_idx = 0
+            for i, line in enumerate(lines):
+                if line.startswith("from ") or line.startswith("import "):
+                    import_idx = i + 1
+            lines.insert(import_idx, import_line)
+            main_content = "\n".join(lines)
+        
+        # Add include_router if not present
+        if include_line not in main_content:
+            # Find where to insert (after app = FastAPI(...))
+            lines = main_content.split("\n")
+            for i, line in enumerate(lines):
+                if "app = FastAPI" in line:
+                    # Find the closing parenthesis
+                    j = i
+                    while j < len(lines) and ")" not in lines[j]:
+                        j += 1
+                    lines.insert(j + 1, f"\n{include_line}")
+                    break
+            main_content = "\n".join(lines)
+        
+        with open(main_path, "w") as f:
+            f.write(main_content)
+        
+        typer.echo(f"✅ Router 'auth' registrado automáticamente en main.py")
+
     typer.echo("\n✅ Módulo de autenticación generado exitosamente!")
     typer.echo(f"📂 app/auth/ - Módulo de autenticación")
     typer.echo(f"📂 app/core/security.py - Configuración JWT")
     typer.echo("\n📝 Próximos pasos:")
     typer.echo("1. Instalar dependencias: pip install 'crudfull[auth]'")
-    typer.echo("2. Agregar el router en app/main.py:")
-    typer.echo("   from app.auth.router import router as auth_router")
-    typer.echo("   app.include_router(auth_router)")
-    typer.echo("\n3. Proteger rutas con:")
+    typer.echo("2. Proteger rutas con:")
     typer.echo("   from app.auth.dependencies import get_current_user")
     typer.echo("   @router.get('/protected')")
     typer.echo("   async def protected(user = Depends(get_current_user)):")
@@ -720,6 +756,167 @@ def sync_routers():
         typer.echo("🚀 main.py sincronizado con todos los routers!")
     else:
         typer.echo("✨ Todo estaba sincronizado. No hubo cambios.")
+
+
+
+# ===========================
+# PROTECT ROUTES
+# ===========================
+# ===========================
+# PROTECT ROUTES
+# ===========================
+@app.command("protect")
+def protect(
+    resource: str = typer.Argument(..., help="Nombre del recurso (ej: users)"),
+    action: str = typer.Argument(None, help="Acción (list, create, read, update, delete) o 'all'"),
+    func_name: str = typer.Option(None, "--func", help="Nombre específico de la función a proteger (ej: create_user)"),
+):
+    """
+    Protege rutas de un recurso con autenticación (Depends(get_current_user)).
+    Uso: 
+      1. Por acción: crudfull protect <resource> <action|all>
+      2. Por función: crudfull protect <resource> --func <nombre_funcion>
+    """
+    if not action and not func_name:
+        typer.echo("❌ Debes especificar una acción o usar --func <nombre>")
+        raise typer.Exit(code=1)
+
+    # Locate router
+    # Support both app/<resource>/router.py and routers/<resource>_router.py
+    modular_path = os.path.join("app", resource, "router.py")
+    legacy_path = os.path.join("routers", f"{resource}_router.py")
+    
+    if os.path.exists(modular_path):
+        router_path = modular_path
+    elif os.path.exists(legacy_path):
+        router_path = legacy_path
+    else:
+        typer.echo(f"❌ No se encontró el router para '{resource}'")
+        raise typer.Exit(code=1)
+
+    with open(router_path, "r") as f:
+        content = f.read()
+
+    # 1. Add Imports
+    modified_content = content
+    
+    if "from app.auth.dependencies import get_current_user" not in modified_content:
+        # Insert after imports
+        lines = modified_content.splitlines()
+        last_import_idx = 0
+        for i, line in enumerate(lines):
+            if line.startswith("from ") or line.startswith("import "):
+                last_import_idx = i
+        
+        lines.insert(last_import_idx + 1, "from app.auth.dependencies import get_current_user")
+        modified_content = "\n".join(lines)
+
+    if "Depends" not in modified_content:
+        # Try to append to fastapi import
+        if "from fastapi import " in modified_content:
+            modified_content = modified_content.replace("from fastapi import ", "from fastapi import Depends, ")
+        else:
+            # Fallback
+            modified_content = "from fastapi import Depends\n" + modified_content
+
+    lines = modified_content.splitlines()
+    new_lines = []
+    changes_made = False
+
+    # ---------------------------
+    # MODO 1: POR FUNCIÓN (--func)
+    # ---------------------------
+    if func_name:
+        # Estrategia: Buscar la definición de la función y subir buscando el decorador
+        target_def = f"def {func_name}("
+        
+        # Primero identificamos los índices de las líneas que queremos modificar
+        lines_to_modify = set()
+        
+        for i, line in enumerate(lines):
+            if target_def in line:
+                # Encontramos la función, buscamos hacia arriba el decorador @router
+                for j in range(i - 1, -1, -1):
+                    prev_line = lines[j].strip()
+                    if prev_line.startswith("@router.") or prev_line.startswith("@app."):
+                        # Encontramos el decorador
+                        lines_to_modify.add(j)
+                        break
+                    if prev_line == "" or prev_line.startswith("#"):
+                        continue
+                    # Si encontramos otra cosa que no sea decorador/comentario/vacío, paramos
+                    if not prev_line.startswith("@"):
+                        break
+        
+        if not lines_to_modify:
+            typer.echo(f"⚠️  No se encontró la función '{func_name}' o su decorador en {router_path}")
+        
+        # Aplicamos cambios
+        for i, line in enumerate(lines):
+            if i in lines_to_modify:
+                if "get_current_user" in line:
+                    new_lines.append(line) # Ya protegido
+                    continue
+                
+                if "dependencies=" in line:
+                    typer.echo(f"⚠️  Saltando línea (ya tiene dependencies): {line.strip()}")
+                    new_lines.append(line)
+                    continue
+
+                parts = line.rsplit(")", 1)
+                if len(parts) >= 2:
+                    line = parts[0] + ", dependencies=[Depends(get_current_user)])" + parts[1]
+                    changes_made = True
+            new_lines.append(line)
+
+    # ---------------------------
+    # MODO 2: POR ACCIÓN (action)
+    # ---------------------------
+    else:
+        # Define targets
+        targets = []
+        if action == "all":
+            targets = ["@router.get", "@router.post", "@router.put", "@router.patch", "@router.delete"]
+        else:
+            if action == "list": targets.append('@router.get("/",')
+            elif action == "create": targets.append('@router.post("/",')
+            elif action == "read": targets.append('@router.get("/{')
+            elif action == "update": 
+                targets.append('@router.patch("/{')
+                targets.append('@router.put("/{')
+            elif action == "delete": targets.append('@router.delete("/{')
+            else:
+                typer.echo(f"❌ Acción desconocida: {action}")
+                raise typer.Exit(code=1)
+
+        for line in lines:
+            matched = False
+            for t in targets:
+                if t in line:
+                    # Check if already protected
+                    if "get_current_user" in line:
+                        matched = True 
+                        break
+                    
+                    if "dependencies=" in line:
+                        typer.echo(f"⚠️  Saltando línea (ya tiene dependencies): {line.strip()}")
+                        matched = True
+                        break
+                    else:
+                        parts = line.rsplit(")", 1)
+                        if len(parts) >= 2:
+                            line = parts[0] + ", dependencies=[Depends(get_current_user)])" + parts[1]
+                            changes_made = True
+                            matched = True
+                            break
+            new_lines.append(line)
+
+    if changes_made:
+        with open(router_path, "w") as f:
+            f.write("\n".join(new_lines))
+        typer.echo(f"✅ Rutas protegidas en {router_path}")
+    else:
+        typer.echo("ℹ️  No se hicieron cambios (¿ya estaban protegidas?)")
 
 
 # ===========================

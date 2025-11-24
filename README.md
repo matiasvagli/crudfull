@@ -153,6 +153,25 @@ pip install crudfull[auth]
 ```
 
 ### Proteger rutas
+Puedes proteger rutas manualmente o usando el CLI:
+
+**Opción 1: Usando CLI (Recomendado)**
+
+```bash
+# Proteger una acción específica (list, create, read, update, delete)
+crudfull protect "recurso" "metodo"
+crudfull protect products create
+
+# Proteger todas las rutas del recurso
+crudfull protect "recurso" "all"
+crudfull protect products all
+
+# Proteger una función específica por su nombre
+crudfull protect "recurso" "funcion"
+crudfull protect products --func upload_file
+```
+
+**Opción 2: Manualmente**
 
 ```python
 from fastapi import Depends
@@ -215,6 +234,13 @@ Agrega autenticación JWT al proyecto
 
 ```bash
 crudfull add auth [--type jwt]
+```
+
+### `crudfull protect`
+Protege rutas de un recurso con autenticación
+
+```bash
+crudfull protect <resource> <action|all> [--func <nombre>]
 ```
 
 ### `crudfull sync-routers run`
