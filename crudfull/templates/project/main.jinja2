@@ -3,6 +3,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import os
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+load_dotenv()
 {% if db == 'sql' %}
 from app.db.session import init_db
 {% elif db == 'mongo' %}

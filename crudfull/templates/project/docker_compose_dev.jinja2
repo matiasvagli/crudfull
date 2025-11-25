@@ -1,12 +1,12 @@
 {% if db == 'sql' %}
 services:
   db:
-    image: postgres:latest
+    image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-dev_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
-      POSTGRES_DB: ${POSTGRES_DB:-dev_db}
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: devdb
     ports:
       - "5432:5432"
     volumes:
@@ -17,11 +17,11 @@ volumes:
 {% elif db == 'mongo' %}
 services:
   db:
-    image: mongo:latest
+    image: mongo:7
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-dev_user}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-dev_password}
+      MONGO_INITDB_ROOT_USERNAME: devuser
+      MONGO_INITDB_ROOT_PASSWORD: devpass
     ports:
       - "27017:27017"
     volumes:

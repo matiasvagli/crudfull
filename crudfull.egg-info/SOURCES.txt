@@ -37,6 +37,7 @@ crudfull/templates/project/docker_compose_dev.jinja2
 crudfull/templates/project/dockerfile.jinja2
 crudfull/templates/project/env.jinja2
 crudfull/templates/project/env_dev.jinja2
+crudfull/templates/project/env_example.jinja2
 crudfull/templates/project/gitignore.jinja2
 crudfull/templates/project/main.jinja2
 crudfull/templates/project/pytest.jinja2

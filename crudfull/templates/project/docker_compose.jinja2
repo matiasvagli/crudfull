@@ -9,29 +9,33 @@ services:
     {% if db != 'ghost' %}
     depends_on:
       - db
+    environment:
+      {% if db == 'sql' %}
+      - DATABASE_URL=postgresql+asyncpg://produser:prodpass@db:5432/proddb
+      {% elif db == 'mongo' %}
+      - MONGO_URL=mongodb://produser:prodpass@db:27017
+      {% endif %}
     {% endif %}
-    env_file:
-      - .env
 
   {% if db == 'sql' %}
   db:
-    image: postgres:latest
+    image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-dbname}
+      POSTGRES_USER: produser
+      POSTGRES_PASSWORD: prodpass
+      POSTGRES_DB: proddb
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
   {% elif db == 'mongo' %}
   db:
-    image: mongo:latest
+    image: mongo:7
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-secret}
+      MONGO_INITDB_ROOT_USERNAME: produser
+      MONGO_INITDB_ROOT_PASSWORD: prodpass
     ports:
       - "27017:27017"
     volumes:

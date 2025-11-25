@@ -370,6 +370,10 @@ def new_project(
     pytest_content = render_template("project/pytest.jinja2", context)
     write_file(name, "pytest.ini", pytest_content)
 
+    # 4.2 README
+    readme_content = render_template("project/readme.jinja2", context)
+    write_file(name, "README.md", readme_content)
+
     # 5. Docker files (optional)
     if docker:
         docker_compose_content = render_template("project/docker_compose.jinja2", context)
@@ -377,17 +381,17 @@ def new_project(
         
         dockerfile_content = render_template("project/dockerfile.jinja2", context)
         write_file(name, "Dockerfile", dockerfile_content)
-        
-        env_content = render_template("project/env.jinja2", context)
-        write_file(name, ".env", env_content)
     
-    # 5.1 Docker Dev files (always generated for SQL/Mongo)
-    if db != 'ghost':
+    # 5.2 Env Example (always generated)
+    env_example_content = render_template("project/env_example.jinja2", context)
+    write_file(name, ".env.example", env_example_content)
+    
+    # 5.1 Docker Dev files (only if docker requested)
+    if docker and db != 'ghost':
         docker_compose_dev_content = render_template("project/docker_compose_dev.jinja2", context)
         write_file(name, "docker-compose.dev.yml", docker_compose_dev_content)
         
-        env_dev_content = render_template("project/env_dev.jinja2", context)
-        write_file(name, ".env.dev", env_dev_content)
+
 
     # 6. Copy static assets (logos, CSS, etc.)
     templates_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -403,13 +407,19 @@ def new_project(
     if docker:
         typer.echo("\n🐳 Modo Producción:")
         typer.echo("   docker-compose up -d --build")
-    if db != 'ghost':
+    if docker and db != 'ghost':
         typer.echo("\n🔧 Modo Desarrollo (solo DB):")
+        typer.echo("   cp .env.example .env")
         typer.echo("   docker-compose -f docker-compose.dev.yml up -d")
         typer.echo("   pip install -r requirements.txt")
         typer.echo("   uvicorn app.main:app --reload")
-    if not docker and db == 'ghost':
-        typer.echo("📦 pip install -r requirements.txt")
+    if not docker:
+        if db != 'ghost':
+            typer.echo("\n⚠️  Nota: No se generaron archivos Docker.")
+            typer.echo("   Asegúrate de tener una base de datos corriendo.")
+            typer.echo("   cp .env.example .env  # Configura tus credenciales")
+        
+        typer.echo("\n📦 pip install -r requirements.txt")
         typer.echo("▶️  uvicorn app.main:app --reload")
     
     # 6. Create crudfull.json config

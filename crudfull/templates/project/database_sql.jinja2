@@ -16,8 +16,33 @@ SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
 
 async def init_db():
-    """Initialize database tables. Fails gracefully if DB is not available."""
+    """Initialize database tables. Fails gracefully if DB is not available.
+    
+    IMPORTANT: Make sure to import all your models in main.py BEFORE calling init_db()
+    so that SQLAlchemy can register them with Base.metadata
+    """
     try:
+        # Import all models here to ensure they're registered
+        # This is a fallback - ideally models should be imported in main.py
+        try:
+            import importlib
+            import pkgutil
+            import app
+            
+            # Dynamically import all modules in app/ to register models
+            for importer, modname, ispkg in pkgutil.walk_packages(
+                path=app.__path__,
+                prefix=app.__name__ + '.',
+                onerror=lambda x: None
+            ):
+                if 'models' in modname:
+                    try:
+                        importlib.import_module(modname)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     except Exception as e:

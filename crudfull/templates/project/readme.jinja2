@@ -1,0 +1,139 @@
+# {{ project_name }}
+
+API REST generada con [crudfull](https://github.com/matiasvagli/crudfull)
+
+## 🚀 Quick Start
+
+### 1. Configurar variables de entorno
+
+```bash
+cp .env.example .env
+```
+
+> **Nota:** El archivo `.env.example` viene con credenciales **hardcodeadas para desarrollo rápido**. 
+> Están configuradas para funcionar directamente con `docker-compose.dev.yml`.
+> **Cambiá estas credenciales en producción.**
+
+{% if db == 'sql' %}
+### 2. Levantar base de datos PostgreSQL
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Esto levanta PostgreSQL con:
+- Usuario: `devuser`
+- Password: `devpass`
+- Base de datos: `devdb`
+- Puerto: `5432`
+
+{% elif db == 'mongo' %}
+### 2. Levantar base de datos MongoDB
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Esto levanta MongoDB con:
+- Usuario: `devuser`
+- Password: `devpass`
+- Puerto: `27017`
+
+{% endif %}
+### 3. Instalar dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Correr la aplicación
+
+```bash
+uvicorn app.main:app --reload
+```
+
+La API estará disponible en:
+- **Docs interactivos:** http://localhost:8000/docs
+- **API:** http://localhost:8000
+
+## 📦 Modo Producción (Docker completo)
+
+Si generaste el proyecto con `--docker`, podés correr todo en contenedores:
+
+```bash
+docker compose up -d --build
+```
+
+> **⚠️ Importante:** En producción, cambiá las credenciales en `docker-compose.yml` o usá variables de entorno.
+
+## 🧪 Tests
+
+```bash
+pytest
+```
+
+## 📁 Estructura del Proyecto
+
+```
+{{ project_name }}/
+├── app/
+│   ├── main.py              # Punto de entrada de la aplicación
+│   ├── db/
+│   │   └── session.py       # Configuración de base de datos
+│   └── [recursos]/          # Módulos generados con crudfull
+│       ├── models.py
+│       ├── schemas.py
+│       ├── service.py
+│       └── router.py
+├── tests/                   # Tests generados automáticamente
+├── .env.example             # Variables de entorno (template)
+├── docker-compose.dev.yml   # Solo DB para desarrollo local
+{% if db != 'ghost' %}├── docker-compose.yml       # App + DB para producción{% endif %}
+└── requirements.txt
+```
+
+## 🔧 Generar nuevos recursos
+
+```bash
+crudfull generate resource products name:str price:float stock:int
+```
+
+Esto genera automáticamente:
+- Modelo de base de datos
+- Schemas de Pydantic
+- CRUD completo
+- Router con endpoints REST
+- Tests
+
+## 📝 Variables de Entorno
+
+El archivo `.env.example` incluye:
+
+{% if db == 'sql' %}
+- `DATABASE_URL`: Conexión a PostgreSQL
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`: Credenciales de la DB
+{% elif db == 'mongo' %}
+- `DATABASE_URL`: Conexión a MongoDB
+- `MONGO_INITDB_ROOT_USERNAME`, `MONGO_INITDB_ROOT_PASSWORD`: Credenciales de la DB
+{% endif %}
+- `SECRET_KEY`: Clave secreta para JWT (si usás autenticación)
+
+**Para desarrollo:** Los valores por defecto funcionan con `docker-compose.dev.yml`
+
+**Para producción:** Cambiá todas las credenciales y usá valores seguros
+
+## 🔐 Agregar Autenticación
+
+```bash
+crudfull add auth --type jwt
+```
+
+Esto agrega:
+- Sistema de usuarios
+- Login/Register
+- JWT tokens
+- Protección de rutas
+
+---
+
+Generado con ❤️ por [crudfull](https://github.com/matiasvagli/crudfull)

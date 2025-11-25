@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime
-from sqlalchemy.orm import declarative_base
+from app.db.session import Base
 
-Base = declarative_base()
 
 class {{ model_name }}(Base):
     __tablename__ = "{{ resource }}"
