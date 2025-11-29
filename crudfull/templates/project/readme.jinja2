@@ -39,6 +39,20 @@ Esto levanta MongoDB con:
 - Password: `devpass`
 - Puerto: `27017`
 
+> **⚠️ Importante para MongoDB:** 
+> La aplicación arrancará sin errores, pero **necesitás generar al menos un recurso** 
+> o agregar autenticación para que Beanie registre modelos:
+> 
+> ```bash
+> # Opción 1: Generar un recurso
+> crudfull generate resource users name:str email:str
+> 
+> # Opción 2: Agregar autenticación
+> crudfull add auth
+> ```
+> 
+> Sin modelos registrados, la app funciona pero no podrás usar la base de datos.
+
 {% endif %}
 ### 3. Instalar dependencias
 

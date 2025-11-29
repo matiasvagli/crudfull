@@ -5,15 +5,33 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# ============================================================
+# IMPORTANT: Import your Beanie Document models here
+# ============================================================
+# After generating resources, import them here:
+# from app.users.models import User
+# from app.products.models import Product
+#
+# Or run: crudfull sync-models (auto-imports all models)
+# ============================================================
+
 async def init_db():
     """Initialize Beanie with MongoDB. Fails gracefully if DB is not available."""
     try:
         mongo_url = os.getenv("MONGO_URL", "mongodb://localhost:27017")
         client = AsyncIOMotorClient(mongo_url)
-        # Initialize beanie with the Product document class and a database
-        # You need to import your models here to register them
-        from app.auth.models import User
-        await init_beanie(database=client.db_name, document_models=[User])
+        
+        # Get database from connection string or use default
+        try:
+            db_name = client.get_default_database().name
+        except Exception:
+            db_name = "{{ project_name }}"
+
+        # Register your models here
+        document_models = []  # Add your imported models to this list
+        
+        await init_beanie(database=client[db_name], document_models=document_models)
     except Exception as e:
         print(f"⚠️  Warning: Could not connect to MongoDB: {e}")
         print("💡 Tip: Set MONGO_URL environment variable or start MongoDB")
+

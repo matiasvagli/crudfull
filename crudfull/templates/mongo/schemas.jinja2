@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-{% if has_optional %}from typing import Optional{% endif %}
+from typing import Optional
 {% if has_datetime %}from datetime import datetime{% endif %}
 {% if has_uuid %}from uuid import UUID{% endif %}
 

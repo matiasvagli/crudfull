@@ -4,13 +4,13 @@ PROJECT_NAME={{ project_name }}
 # Database Configuration (matches docker-compose.dev.yml)
 POSTGRES_USER=devuser
 POSTGRES_PASSWORD=devpass
-POSTGRES_DB=devdb
-DATABASE_URL=postgresql+asyncpg://devuser:devpass@localhost:5432/devdb
+POSTGRES_DB={{ project_name }}
+DATABASE_URL=postgresql+asyncpg://devuser:devpass@localhost:5432/{{ project_name }}
 {% elif db == 'mongo' %}
 # Database Configuration (matches docker-compose.dev.yml)
 MONGO_INITDB_ROOT_USERNAME=devuser
 MONGO_INITDB_ROOT_PASSWORD=devpass
-DATABASE_URL=mongodb://devuser:devpass@localhost:27017
+MONGO_URL=mongodb://devuser:devpass@localhost:27017/{{ project_name }}?authSource=admin
 {% endif %}
 
 # Security
