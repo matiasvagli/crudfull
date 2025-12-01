@@ -6,8 +6,8 @@ repo_name: matiasvagli/crudfull
 
 theme:
   name: material
-  logo: statics/logo_transparent_real.png
-  favicon: statics/logo_transparent_real.png
+  logo: statics/LT2.png
+  favicon: statics/LT2.png
   palette:
     # Palette toggle for dark mode
     - scheme: slate
