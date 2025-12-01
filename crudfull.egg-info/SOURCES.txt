@@ -21,12 +21,14 @@ crudfull/templates/auth/security.jinja2
 crudfull/templates/auth/service.jinja2
 crudfull/templates/auth/test_auth.jinja2
 crudfull/templates/ghost/conftest.jinja2
+crudfull/templates/ghost/repository.jinja2
 crudfull/templates/ghost/router.jinja2
 crudfull/templates/ghost/schemas.jinja2
 crudfull/templates/ghost/service.jinja2
 crudfull/templates/mongo/conftest.jinja2
 crudfull/templates/mongo/database_mongo_example.jinja2
 crudfull/templates/mongo/models.jinja2
+crudfull/templates/mongo/repository.jinja2
 crudfull/templates/mongo/router.jinja2
 crudfull/templates/mongo/schemas.jinja2
 crudfull/templates/mongo/service.jinja2
@@ -50,6 +52,7 @@ crudfull/templates/sql/conftest.jinja2
 crudfull/templates/sql/create_tables.jinja2
 crudfull/templates/sql/database_sql_example.jinja2
 crudfull/templates/sql/models.jinja2
+crudfull/templates/sql/repository.jinja2
 crudfull/templates/sql/router.jinja2
 crudfull/templates/sql/schemas.jinja2
 crudfull/templates/sql/service.jinja2

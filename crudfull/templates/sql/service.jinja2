@@ -1,44 +1,22 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from .models import {{ model_name }}
-from .schemas import {{ model_name }}Create, {{ model_name }}Update
+from typing import List, Optional
+from .schemas import {{ model_name }}Create, {{ model_name }}Update, {{ model_name }}Response
+from .repository import {{ model_name }}Repository
 
 class {{ model_name }}Service:
-    def __init__(self, db: AsyncSession):
-        self.db = db
+    def __init__(self, repository: {{ model_name }}Repository):
+        self.repository = repository
 
-    async def list(self):
-        result = await self.db.execute(select({{ model_name }}))
-        return result.scalars().all()
+    async def list(self) -> List[{{ model_name }}Response]:
+        return await self.repository.list()
 
-    async def create(self, item: {{ model_name }}Create):
-        obj = {{ model_name }}(**item.model_dump())
-        self.db.add(obj)
-        await self.db.commit()
-        await self.db.refresh(obj)
-        return obj
+    async def create(self, item: {{ model_name }}Create) -> {{ model_name }}Response:
+        return await self.repository.create(item)
 
-    async def read(self, id: int):
-        result = await self.db.execute(select({{ model_name }}).where({{ model_name }}.id == id))
-        return result.scalars().first()
+    async def read(self, id: int) -> Optional[{{ model_name }}Response]:
+        return await self.repository.get(id)
 
-    async def update(self, id: int, item: {{ model_name }}Update):
-        obj = await self.read(id)
-        if not obj:
-            return None
-        
-        for key, value in item.model_dump(exclude_unset=True).items():
-            setattr(obj, key, value)
-        
-        await self.db.commit()
-        await self.db.refresh(obj)
-        return obj
+    async def update(self, id: int, item: {{ model_name }}Update) -> Optional[{{ model_name }}Response]:
+        return await self.repository.update(id, item)
 
-    async def delete(self, id: int):
-        obj = await self.read(id)
-        if not obj:
-            return None
-        
-        await self.db.delete(obj)
-        await self.db.commit()
-        return obj
+    async def delete(self, id: int) -> Optional[{{ model_name }}Response]:
+        return await self.repository.delete(id)

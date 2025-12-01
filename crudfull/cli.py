@@ -775,6 +775,7 @@ def _generate_single_resource(name: str, fields: list[str], db: str):
             "models.py": "sql/models.jinja2",
             "service.py": "sql/service.jinja2",
             "router.py": "sql/router.jinja2",
+            "repository.py": "sql/repository.jinja2",
         }
     elif db == "mongo":
         files = {
@@ -782,12 +783,14 @@ def _generate_single_resource(name: str, fields: list[str], db: str):
             "models.py": "mongo/models.jinja2",
             "service.py": "mongo/service.jinja2",
             "router.py": "mongo/router.jinja2",
+            "repository.py": "mongo/repository.jinja2",
         }
     elif db == "ghost":
         files = {
             "schemas.py": "ghost/schemas.jinja2",
             "service.py": "ghost/service.jinja2",
             "router.py": "ghost/router.jinja2",
+            "repository.py": "ghost/repository.jinja2",
         }
     else:
         typer.echo(f"❌ Motor {db} no soportado.")

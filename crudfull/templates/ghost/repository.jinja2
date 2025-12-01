@@ -1,0 +1,38 @@
+from typing import List, Optional, Dict, Any
+from .schemas import {{ model_name }}Create, {{ model_name }}Update
+
+class {{ model_name }}Repository:
+    def __init__(self):
+        self.items = []
+        self.auto_id = 1
+
+    async def list(self) -> List[Dict[str, Any]]:
+        return self.items
+
+    async def create(self, item: {{ model_name }}Create) -> Dict[str, Any]:
+        obj = item.model_dump()
+        obj["id"] = self.auto_id
+        self.auto_id += 1
+        self.items.append(obj)
+        return obj
+
+    async def get(self, id: int) -> Optional[Dict[str, Any]]:
+        for item in self.items:
+            if item["id"] == id:
+                return item
+        return None
+
+    async def update(self, id: int, item: {{ model_name }}Update) -> Optional[Dict[str, Any]]:
+        for idx, existing in enumerate(self.items):
+            if existing["id"] == id:
+                updated = {**existing, **item.model_dump(exclude_unset=True)}
+                self.items[idx] = updated
+                return updated
+        return None
+
+    async def delete(self, id: int) -> Optional[Dict[str, Any]]:
+        for idx, existing in enumerate(self.items):
+            if existing["id"] == id:
+                deleted = self.items.pop(idx)
+                return deleted
+        return None

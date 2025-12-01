@@ -1,40 +1,35 @@
-from .models import {{ model_name }}
+from typing import List, Optional
 from .schemas import {{ model_name }}Create, {{ model_name }}Update, {{ model_name }}Response
+from .repository import {{ model_name }}Repository
 
 class {{ model_name }}Service:
-    def _to_response(self, doc: {{ model_name }}) -> {{ model_name }}Response:
-        """Convert Beanie document to Response schema with ObjectId as string"""
+    def __init__(self, repository: {{ model_name }}Repository):
+        self.repository = repository
+
+    def _to_response(self, doc) -> {{ model_name }}Response:
+        """Convert document to Response schema with ObjectId as string"""
+        if not doc:
+            return None
         doc_dict = doc.model_dump()
         doc_dict['id'] = str(doc.id)
         return {{ model_name }}Response(**doc_dict)
 
-    async def list(self):
-        docs = await {{ model_name }}.find().to_list()
+    async def list(self) -> List[{{ model_name }}Response]:
+        docs = await self.repository.list()
         return [self._to_response(doc) for doc in docs]
 
-    async def create(self, item: {{ model_name }}Create):
-        doc = {{ model_name }}(**item.model_dump())
-        await doc.insert()
+    async def create(self, item: {{ model_name }}Create) -> {{ model_name }}Response:
+        doc = await self.repository.create(item)
         return self._to_response(doc)
 
-    async def read(self, id: str):
-        doc = await {{ model_name }}.get(id)
-        if not doc:
-            return None
+    async def read(self, id: str) -> Optional[{{ model_name }}Response]:
+        doc = await self.repository.get(id)
         return self._to_response(doc)
 
-    async def update(self, id: str, item: {{ model_name }}Update):
-        doc = await {{ model_name }}.get(id)
-        if not doc:
-            return None
-        
-        await doc.set(item.model_dump(exclude_unset=True))
+    async def update(self, id: str, item: {{ model_name }}Update) -> Optional[{{ model_name }}Response]:
+        doc = await self.repository.update(id, item)
         return self._to_response(doc)
 
-    async def delete(self, id: str):
-        doc = await {{ model_name }}.get(id)
-        if not doc:
-            return None
-        
-        await doc.delete()
+    async def delete(self, id: str) -> Optional[{{ model_name }}Response]:
+        doc = await self.repository.delete(id)
         return self._to_response(doc)

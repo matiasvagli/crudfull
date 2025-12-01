@@ -97,6 +97,7 @@ pytest
 │   └── [recursos]/          # Módulos generados con crudfull
 │       ├── models.py
 │       ├── schemas.py
+│       ├── repository.py   # Nuevo layer de acceso a datos
 │       ├── service.py
 │       └── router.py
 ├── tests/                   # Tests generados automáticamente
@@ -106,7 +107,12 @@ pytest
 └── requirements.txt
 ```
 
-## 🔧 Generar nuevos recursos
+## � Patrón Repository
+
+Se añadió una capa de **Repository** para abstraer el acceso a datos y desacoplar los servicios de la implementación concreta de la base de datos (MongoDB, SQL o Ghost). Cada recurso ahora incluye `repository.py` que expone métodos CRUD y es inyectado en los servicios.
+
+
+## �🔧 Generar nuevos recursos
 
 ```bash
 crudfull generate resource products name:str price:float stock:int

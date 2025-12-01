@@ -3,9 +3,11 @@ from typing import List
 
 from .schemas import {{ model_name }}Create, {{ model_name }}Update, {{ model_name }}Response
 from .service import {{ model_name }}Service
+from .repository import {{ model_name }}Repository
 
 router = APIRouter(prefix="/{{ resource }}", tags=["{{ model_name }}"])
-service = {{ model_name }}Service()
+repository = {{ model_name }}Repository()
+service = {{ model_name }}Service(repository)
 
 @router.get("/", response_model=List[{{ model_name }}Response])
 async def list_{{ resource }}():

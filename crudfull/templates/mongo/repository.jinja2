@@ -1,0 +1,31 @@
+from typing import List, Optional
+from .models import {{ model_name }}
+from .schemas import {{ model_name }}Create, {{ model_name }}Update
+
+class {{ model_name }}Repository:
+    async def list(self) -> List[{{ model_name }}]:
+        return await {{ model_name }}.find().to_list()
+
+    async def create(self, item: {{ model_name }}Create) -> {{ model_name }}:
+        doc = {{ model_name }}(**item.model_dump())
+        await doc.insert()
+        return doc
+
+    async def get(self, id: str) -> Optional[{{ model_name }}]:
+        return await {{ model_name }}.get(id)
+
+    async def update(self, id: str, item: {{ model_name }}Update) -> Optional[{{ model_name }}]:
+        doc = await self.get(id)
+        if not doc:
+            return None
+        
+        await doc.set(item.model_dump(exclude_unset=True))
+        return doc
+
+    async def delete(self, id: str) -> Optional[{{ model_name }}]:
+        doc = await self.get(id)
+        if not doc:
+            return None
+        
+        await doc.delete()
+        return doc

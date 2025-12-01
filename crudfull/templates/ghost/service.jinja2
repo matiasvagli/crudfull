@@ -1,38 +1,22 @@
+from typing import List, Optional, Dict, Any
 from .schemas import {{ model_name }}Create, {{ model_name }}Update
+from .repository import {{ model_name }}Repository
 
 class {{ model_name }}Service:
-    def __init__(self):
-        self.items = []
-        self.auto_id = 1
+    def __init__(self, repository: {{ model_name }}Repository):
+        self.repository = repository
 
-    def list(self):
-        return self.items
+    async def list(self) -> List[Dict[str, Any]]:
+        return await self.repository.list()
 
-    def get(self, item_id: int):
-        for item in self.items:
-            if item["id"] == item_id:
-                return item
-        return None
+    async def get(self, item_id: int) -> Optional[Dict[str, Any]]:
+        return await self.repository.get(item_id)
 
-    def create(self, item: {{ model_name }}Create):
-        obj = item.model_dump()
-        obj["id"] = self.auto_id
-        self.auto_id += 1
+    async def create(self, item: {{ model_name }}Create) -> Dict[str, Any]:
+        return await self.repository.create(item)
 
-        self.items.append(obj)
-        return obj
+    async def update(self, item_id: int, item: {{ model_name }}Update) -> Optional[Dict[str, Any]]:
+        return await self.repository.update(item_id, item)
 
-    def update(self, item_id: int, item: {{ model_name }}Update):
-        for idx, existing in enumerate(self.items):
-            if existing["id"] == item_id:
-                updated = {**existing, **item.model_dump(exclude_unset=True)}
-                self.items[idx] = updated
-                return updated
-        return None
-
-    def delete(self, item_id: int):
-        for idx, existing in enumerate(self.items):
-            if existing["id"] == item_id:
-                deleted = self.items.pop(idx)
-                return deleted
-        return None
+    async def delete(self, item_id: int) -> Optional[Dict[str, Any]]:
+        return await self.repository.delete(item_id)

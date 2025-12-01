@@ -49,27 +49,30 @@ crudfull n mi_proyecto -d sql --docker
 
 cd mi_proyecto
 ```
-Esto genera:
-```
-mi_proyecto/
+## 📁 Estructura del Proyecto
+
+```text
+{{ project_name }}/
 ├── app/
-│   ├── main.py
-│   ├── welcome.html
+│   ├── main.py              # Punto de entrada de la aplicación
 │   ├── db/
-│   │   └── session.py
-│   └── core/   # opcional, auth
-├── tests/
-│   └── conftest.py
-├── crudfull.json
-├── requirements.txt
-├── .gitignore
-├── pytest.ini
-├── README.md
-├── docker-compose.yml
-├── docker-compose.dev.yml
-├── Dockerfile
-└── .env.example
+│   │   └── session.py       # Configuración de base de datos
+│   └── [recursos]/          # Módulos generados con crudfull
+│       ├── models.py
+│       ├── schemas.py
+│       ├── repository.py   # Nuevo layer de acceso a datos
+│       ├── service.py
+│       └── router.py
+├── tests/                   # Tests generados automáticamente
+├── .env.example             # Variables de entorno (template)
+├── docker-compose.dev.yml   # Solo DB para desarrollo local
+{% if db != 'ghost' %}├── docker-compose.yml       # App + DB para producción{% endif %}
+└── requirements.txt
 ```
+
+## 📂 Patrón Repository
+
+Se añadió una capa de **Repository** para abstraer el acceso a datos y desacoplar los servicios de la implementación concreta de la base de datos (MongoDB, SQL o Ghost). Cada recurso ahora incluye `repository.py` que expone métodos CRUD y es inyectado en los servicios.
 
 ### Generar recursos (detecta DB automáticamente)
 ```bash
