@@ -1,15 +1,25 @@
 <svg width="512" height="160" viewBox="0 0 512 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">CRUDfull Logo</title>
-  <desc id="desc">Logo tipográfico simple con la palabra CRUDfull</desc>
+  <desc id="desc">Logo CRUDfull con rayo estilizado</desc>
 
   <!-- Fondo transparente -->
   <rect width="512" height="160" fill="none"></rect>
 
+  <!-- Ícono: Rayo simple y limpio -->
+  <g transform="translate(115, 80)">
+    <path d="M 0,-25 L -12,5 L -3,5 L -15,25 L 5,-8 L -4,-8 Z" 
+          fill="#00AEEF" 
+          stroke="#0B3C7D" 
+          stroke-width="2"/>
+  </g>
+
   <!-- Texto principal -->
-  <text x="50%" y="55%" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="700" fill="#0B3C7D">
+  <text x="54%" y="55%" text-anchor="middle" 
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
+        font-size="64" font-weight="700" fill="#0B3C7D">
     CRUD<tspan fill="#00AEEF">full</tspan>
   </text>
 
-  <!-- Subrayado simple -->
-  <rect x="120" y="105" width="272" height="4" rx="2" fill="#00AEEF"></rect>
+  <!-- Subrayado -->
+  <rect x="145" y="105" width="245" height="4" rx="2" fill="#00AEEF"></rect>
 </svg>

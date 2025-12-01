@@ -47,6 +47,7 @@ crudfull/templates/project/pytest.jinja2
 crudfull/templates/project/readme.jinja2
 crudfull/templates/project/requirements.jinja2
 crudfull/templates/project/welcome.html.jinja2
+crudfull/templates/project/static/logo.png
 crudfull/templates/project/static/logo.svg
 crudfull/templates/sql/conftest.jinja2
 crudfull/templates/sql/create_tables.jinja2
