@@ -1,0 +1,52 @@
+site_name: CRUDfull
+site_description: Generador de proyectos y recursos CRUD para FastAPI
+site_url: https://matiasvagli.github.io/crudfull/
+repo_url: https://github.com/matiasvagli/crudfull
+repo_name: matiasvagli/crudfull
+
+theme:
+  name: material
+  logo: statics/logo_transparent_real.png
+  favicon: statics/logo_transparent_real.png
+  palette:
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: indigo
+      accent: pink
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - scheme: default
+      primary: indigo
+      accent: pink
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Inicio: index.md
+  - Instalación: installation.md
+  - Primeros Pasos: getting-started.md
+  - Referencia CLI: cli-reference.md
+  - Arquitectura: architecture.md
+  - Avanzado: advanced.md
+  - Contribuir: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
