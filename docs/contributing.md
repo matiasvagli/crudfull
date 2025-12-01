@@ -12,3 +12,10 @@ pip install -e .
 
 ## 📄 Licencia
 MIT
+
+---
+<div align="center">
+
+[⬅️ Anterior](./advanced.md) | [🏠 Inicio](./index.md)
+
+</div>

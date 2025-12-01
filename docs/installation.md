@@ -15,3 +15,10 @@ Solo `typer`, `jinja2` e `inflect`.
 ## Opcionales
 - Tests: `pip install crudfull[test]`
 - Auth: `pip install crudfull[auth]`
+
+---
+<div align="center">
+
+[🏠 Inicio](./index.md) | [Siguiente ➡️](./getting-started.md)
+
+</div>

@@ -77,3 +77,10 @@ crudfull v show
 - `--type` → `-t` (tipo de autenticación)
 - `--force` → `-f` (forzar sobrescritura)
 - `--func` → `--fn` (función específica)
+
+---
+<div align="center">
+
+[⬅️ Anterior](./getting-started.md) | [🏠 Inicio](./index.md) | [Siguiente ➡️](./architecture.md)
+
+</div>
