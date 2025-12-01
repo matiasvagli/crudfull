@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalación - CRUDfull</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" href="assets/images/LT2.png">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <button id="mobile-menu-btn" class="mobile-menu-btn">☰</button>
+                <a href="index.html" class="logo-text">
+                    <img src="assets/images/LT2.png" alt="CRUDfull Logo" class="logo">
+                    CRUDfull
+                </a>
+            </div>
+            <div class="header-controls">
+                <a href="https://github.com/matiasvagli/crudfull" target="_blank" class="github-link">GitHub</a>
+                <button id="theme-toggle" class="theme-toggle">☀️</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="index.html">🏠 Inicio</a></li>
+                    <li><a href="installation.html">📦 Instalación</a></li>
+                    <li><a href="getting-started.html">🚀 Primeros Pasos</a></li>
+                    <li><a href="cli-reference.html">📚 Referencia CLI</a></li>
+                    <li><a href="architecture.html">🏗️ Arquitectura</a></li>
+                    <li><a href="advanced.html">🧠 Avanzado</a></li>
+                    <li><a href="contributing.html">🤝 Contribuir</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <h1>📦 Instalación</h1>
+
+                <h2>Completa (recomendada)</h2>
+                <p>Instala todo lo necesario para empezar a trabajar con cualquier base de datos y funcionalidades.</p>
+                <pre><code>pip install crudfull</code></pre>
+                <p>Incluye:</p>
+                <ul>
+                    <li>FastAPI</li>
+                    <li>Uvicorn</li>
+                    <li>SQLAlchemy + AsyncPG</li>
+                    <li>Beanie + Motor</li>
+                    <li>Pydantic</li>
+                    <li>python-dotenv</li>
+                </ul>
+
+                <h2>Ligera (solo CLI)</h2>
+                <p>Si solo necesitas la herramienta de línea de comandos sin todas las dependencias del proyecto
+                    generado.</p>
+                <pre><code>pip install crudfull[lite]</code></pre>
+                <p>Solo incluye <code>typer</code>, <code>jinja2</code> e <code>inflect</code>.</p>
+
+                <h2>Opcionales</h2>
+                <p>Puedes instalar dependencias específicas según tus necesidades:</p>
+
+                <h3>Tests</h3>
+                <pre><code>pip install crudfull[test]</code></pre>
+
+                <h3>Autenticación</h3>
+                <pre><code>pip install crudfull[auth]</code></pre>
+
+                <div class="nav-links" style="justify-content: space-between; margin-top: 3rem;">
+                    <a href="index.html" style="background-color: var(--bg-tertiary); color: var(--text-primary);">←
+                        Inicio</a>
+                    <a href="getting-started.html">Siguiente: Primeros Pasos →</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 # ⚡️ CRUDFULL — FastAPI Project Generator
 
 <div align="center">
-  <img src="./loguito.jpeg" alt="CRUDFULL Logo" style="width: 850px; height: 350px;"/>
+  <img src="./LT2.png" alt="CRUDFULL Logo" style="width: 850px; height: 350px;"/>
 </div>
 
 **CRUDFULL** te permite crear APIs REST completas en segundos, con arquitectura modular y soporte para múltiples bases de datos.
