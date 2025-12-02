@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referencia CLI - CRUDfull</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" href="assets/images/LT2.png">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <button id="mobile-menu-btn" class="mobile-menu-btn">☰</button>
+                <a href="index.html" class="logo-text">
+                    <img src="assets/images/LT2.png" alt="CRUDfull Logo" class="logo">
+                    CRUDfull
+                </a>
+            </div>
+            <div class="header-controls">
+                <a href="https://github.com/matiasvagli/crudfull" target="_blank" class="github-link">GitHub</a>
+                <button id="theme-toggle" class="theme-toggle">☀️</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="index.html">🏠 Inicio</a></li>
+                    <li><a href="installation.html">📦 Instalación</a></li>
+                    <li><a href="getting-started.html">🚀 Primeros Pasos</a></li>
+                    <li><a href="cli-reference.html">📚 Referencia CLI</a></li>
+                    <li><a href="architecture.html">🏗️ Arquitectura</a></li>
+                    <li><a href="advanced.html">🧠 Avanzado</a></li>
+                    <li><a href="contributing.html">🤝 Contribuir</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <h1>📚 Comandos CLI</h1>
+
+                <h2>Comandos Principales</h2>
+
+                <h3>🆕 Crear Proyecto</h3>
+                <pre><code>crudfull new <name> --db [sql|mongo|ghost] [--docker]
+# Alias: crudfull n
+crudfull n mi_api --db mongo
+crudfull n mi_api -d sql --docker</code></pre>
+
+                <h3>📦 Generar Recursos</h3>
+                <pre><code>crudfull generate resource <name> <field>:<type> ...
+# Alias: crudfull gen, crudfull g, crudfull g r
+crudfull g r users name:str email:str age:int
+crudfull gen resource products title:str price:float stock:int description:str?
+
+# 🆕 Generar múltiples recursos a la vez (separador +)
+crudfull g r posts title:str content:str + users name:str email:str</code></pre>
+                <p><strong>Tipos soportados</strong>: <code>str</code>, <code>int</code>, <code>float</code>,
+                    <code>bool</code>, <code>datetime</code>, <code>uuid</code><br>
+                    <strong>Campos opcionales</strong>: Agregar <code>?</code> al final (ej: <code>bio:str?</code>)
+                </p>
+
+                <h3>🔐 Agregar Autenticación</h3>
+                <pre><code>crudfull add auth [--type jwt|oauth2|session]
+# Alias: crudfull a
+crudfull a auth
+crudfull a auth -t jwt</code></pre>
+
+                <h3>🔒 Proteger Rutas</h3>
+                <pre><code>crudfull protect <resource> <action|all> [--func <function>]
+crudfull protect users all
+crudfull protect products create
+crudfull protect posts --func create_post
+crudfull protect posts --fn create_post  # alias de --func</code></pre>
+
+                <h3>🔄 Sincronizar Routers</h3>
+                <pre><code>crudfull sync-routers run
+# Alias: crudfull sync
+crudfull sync run</code></pre>
+
+                <h3>🔄 Sincronizar Modelos (MongoDB)</h3>
+                <pre><code>crudfull sync-models</code></pre>
+
+                <h3>ℹ️ Versión</h3>
+                <pre><code>crudfull version show
+# Alias: crudfull v
+crudfull v show</code></pre>
+
+                <h2>⚡ Tabla de Alias</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Comando Completo</th>
+                            <th>Alias</th>
+                            <th>Ejemplo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>crudfull new</code></td>
+                            <td><code>crudfull n</code></td>
+                            <td><code>crudfull n mi_api -d mongo</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>crudfull generate</code></td>
+                            <td><code>crudfull gen</code>, <code>crudfull g</code></td>
+                            <td><code>crudfull g r users name:str</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>crudfull generate resource</code></td>
+                            <td><code>crudfull g r</code>, <code>crudfull gen res</code></td>
+                            <td><code>crudfull g r posts title:str</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>crudfull add</code></td>
+                            <td><code>crudfull a</code></td>
+                            <td><code>crudfull a auth -t jwt</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>crudfull version</code></td>
+                            <td><code>crudfull v</code></td>
+                            <td><code>crudfull v show</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>crudfull sync-routers</code></td>
+                            <td><code>crudfull sync</code></td>
+                            <td><code>crudfull sync run</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>💡 Opciones Cortas</h2>
+                <ul>
+                    <li><code>--db</code> → <code>-d</code> (motor de base de datos)</li>
+                    <li><code>--type</code> → <code>-t</code> (tipo de autenticación)</li>
+                    <li><code>--force</code> → <code>-f</code> (forzar sobrescritura)</li>
+                    <li><code>--func</code> → <code>--fn</code> (función específica)</li>
+                </ul>
+
+                <div class="nav-links" style="justify-content: space-between; margin-top: 3rem;">
+                    <a href="getting-started.html"
+                        style="background-color: var(--bg-tertiary); color: var(--text-primary);">← Primeros Pasos</a>
+                    <a href="architecture.html">Siguiente: Arquitectura →</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>

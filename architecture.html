@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitectura - CRUDfull</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" href="assets/images/LT2.png">
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <button id="mobile-menu-btn" class="mobile-menu-btn">☰</button>
+                <a href="index.html" class="logo-text">
+                    <img src="assets/images/LT2.png" alt="CRUDfull Logo" class="logo">
+                    CRUDfull
+                </a>
+            </div>
+            <div class="header-controls">
+                <a href="https://github.com/matiasvagli/crudfull" target="_blank" class="github-link">GitHub</a>
+                <button id="theme-toggle" class="theme-toggle">☀️</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="index.html">🏠 Inicio</a></li>
+                    <li><a href="installation.html">📦 Instalación</a></li>
+                    <li><a href="getting-started.html">🚀 Primeros Pasos</a></li>
+                    <li><a href="cli-reference.html">📚 Referencia CLI</a></li>
+                    <li><a href="architecture.html">🏗️ Arquitectura</a></li>
+                    <li><a href="advanced.html">🧠 Avanzado</a></li>
+                    <li><a href="contributing.html">🤝 Contribuir</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <h1>🏗️ Arquitectura</h1>
+
+                <h2>📁 Estructura del Proyecto</h2>
+                <pre><code>{{ project_name }}/
+├── app/
+│   ├── main.py              # Punto de entrada de la aplicación
+│   ├── db/
+│   │   └── session.py       # Configuración de base de datos
+│   └── [recursos]/          # Módulos generados con crudfull
+│       ├── models.py
+│       ├── schemas.py
+│       ├── repository.py   # Nuevo layer de acceso a datos
+│       ├── service.py
+│       └── router.py
+├── tests/                   # Tests generados automáticamente
+├── .env.example             # Variables de entorno (template)
+├── docker-compose.dev.yml   # Solo DB para desarrollo local
+├── docker-compose.yml       # App + DB para producción
+└── requirements.txt</code></pre>
+
+                <h2>📂 Patrón Repository</h2>
+                <p>Se añadió una capa de <strong>Repository</strong> para abstraer el acceso a datos y desacoplar los
+                    servicios de la implementación concreta de la base de datos (MongoDB, SQL o Ghost). Cada recurso
+                    ahora incluye <code>repository.py</code> que expone métodos CRUD y es inyectado en los servicios.
+                </p>
+
+                <h3>Generar recursos (detecta DB automáticamente)</h3>
+                <pre><code># Forma completa
+crudfull generate resource products name:str price:float stock:int
+
+# Usando alias (más rápido)
+crudfull g r users name:str email:str age:int
+crudfull g r posts title:str content:str published:bool author_id:uuid</code></pre>
+                <p>Cada recurso crea <code>schemas.py</code>, <code>models.py</code>, <code>service.py</code>,
+                    <code>router.py</code> y tests.</p>
+
+                <div class="nav-links" style="justify-content: space-between; margin-top: 3rem;">
+                    <a href="cli-reference.html"
+                        style="background-color: var(--bg-tertiary); color: var(--text-primary);">← Referencia CLI</a>
+                    <a href="advanced.html">Siguiente: Avanzado →</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>
