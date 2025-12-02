@@ -57,8 +57,4 @@ uvicorn app.main:app --reload
 ```
 
 ---
-<div align="center">
 
-[⬅️ Anterior](./installation.md) | [🏠 Inicio](./index.md) | [Siguiente ➡️](./cli-reference.md)
-
-</div>

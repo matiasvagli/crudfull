@@ -61,8 +61,3 @@ pytest
 Para SQL se usa SQLite in‑memory, para Mongo una base de prueba aislada.
 
 ---
-<div align="center">
-
-[⬅️ Anterior](./architecture.md) | [🏠 Inicio](./index.md) | [Siguiente ➡️](./contributing.md)
-
-</div>

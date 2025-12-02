@@ -79,8 +79,3 @@ crudfull v show
 - `--func` → `--fn` (función específica)
 
 ---
-<div align="center">
-
-[⬅️ Anterior](./getting-started.md) | [🏠 Inicio](./index.md) | [Siguiente ➡️](./architecture.md)
-
-</div>

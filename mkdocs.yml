@@ -4,6 +4,9 @@ site_url: https://matiasvagli.github.io/crudfull/
 repo_url: https://github.com/matiasvagli/crudfull
 repo_name: matiasvagli/crudfull
 
+# Prevent Jekyll processing on GitHub Pages
+use_directory_urls: true
+
 theme:
   name: material
   logo: statics/LT2.png
@@ -27,6 +30,7 @@ theme:
     - navigation.instant
     - navigation.tracking
     - navigation.top
+    - navigation.footer
     - content.code.copy
     - search.suggest
     - search.highlight

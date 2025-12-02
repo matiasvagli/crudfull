@@ -37,8 +37,4 @@ crudfull g r posts title:str content:str published:bool author_id:uuid
 Cada recurso crea `schemas.py`, `models.py`, `service.py`, `router.py` y tests.
 
 ---
-<div align="center">
 
-[⬅️ Anterior](./cli-reference.md) | [🏠 Inicio](./index.md) | [Siguiente ➡️](./advanced.md)
-
-</div>

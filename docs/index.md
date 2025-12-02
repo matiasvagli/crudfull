@@ -1,7 +1,7 @@
 # 📘 CRUDfull — Documentación Oficial
 
 <div align="center">
-  <img src="./statics/logonuevo.png" alt="CRUDFULL Logo" style="width: 450px; height: 250px;"/>
+  <img src="./statics/LT2.png" alt="CRUDFULL Logo" style="width: 450px; height: 250px;"/>
 </div>
 
 Bienvenido a la documentación oficial de **CRUDfull**, un generador de proyectos y recursos CRUD para FastAPI, diseñado para crear APIs escalables, modulares y listas para producción en cuestión de segundos.

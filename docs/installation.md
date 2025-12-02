@@ -17,8 +17,4 @@ Solo `typer`, `jinja2` e `inflect`.
 - Auth: `pip install crudfull[auth]`
 
 ---
-<div align="center">
 
-[🏠 Inicio](./index.md) | [Siguiente ➡️](./getting-started.md)
-
-</div>

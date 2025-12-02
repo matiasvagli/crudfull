@@ -14,8 +14,4 @@ pip install -e .
 MIT
 
 ---
-<div align="center">
 
-[⬅️ Anterior](./advanced.md) | [🏠 Inicio](./index.md)
-
-</div>
